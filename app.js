@@ -2,11 +2,13 @@ const express= require('express')
 const mongoose= require('mongoose')
 const env= require('dotenv/config')
 
+const port = process.env.PORT || 3000;
+
 const cors = require('cors');
 
 
 const app= express();
-app.use(function(req, res, next) {
+app.all(function(req, res, next) {
     res.header("Access-Control-Allow-Origin", '*');
     res.header("Access-Control-Allow-Credentials", true);
     res.header('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS');
@@ -52,8 +54,8 @@ app.use('/api/homologacion/',homologacionRoute)
 const avanceRoute= require('./routes/avance')
 app.use('/api/avance/',avanceRoute) 
 
-app.listen('3000',()=>{
- console.log('server is running')
+app.listen(port,()=>{
+ console.log('server is running'+port)
 })
 
 mongoose.connect(process.env.BD,{useNewUrlParser:true,useUnifiedTopology:true},(err)=>{
