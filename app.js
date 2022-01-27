@@ -14,9 +14,7 @@ app.use(function(req, res, next) {
     next();
 });
 
-app.use(cors({
-    origin: '*'
-}));
+app.use(cors());
 
 const userRoute= require('./routes/user')
 app.use('/api/',userRoute)
