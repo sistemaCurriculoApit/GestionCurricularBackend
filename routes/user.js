@@ -1,0 +1,180 @@
+const express = require('express')
+const userModel = require('../models/user')
+const route = express.Router()
+const joi = require('@hapi/joi')
+const bcrypt = require('bcrypt')
+const jwt = require('jsonwebtoken')
+const verify = require('./validarToken')
+const verifyToken = require('./validarToken')
+const { paginationSize } = require('../constants/constants')
+
+var crypto = require('crypto');
+
+route.get('/home', (req, res) => {
+    res.json({
+        body: {
+            message: 'api.. probando /home'
+        }
+
+    });
+})
+
+route.get('/user/token', async (req, res) => {
+    const token = jwt.sign({ id: 1212121 }, process.env.SECRET);
+    res.send(token)
+})
+route.post('/user/add', verifyToken, async (req, res) => {
+
+
+    /* const schema =joi.object({
+         name:joi.string().min(5).required(),
+         mail:joi.string().min(5).required().email(),
+         password:joi.string().min(10).required()
+ 
+     })
+     const err=schema.validate(req.body)
+      if(err) return res.status(400).send(err.error.details)
+ 
+     const salt= await bcrypt.genSalt(10)
+     const haspassword= await bcrypt.hash(req.body.password,salt)
+ console.log('paso 1')*/
+    const usuarioValidar = await userModel.findOne({ correo: req.body.correo })
+    if (usuarioValidar) return res.status(400).json({
+        error: "Validación Datos",
+        descripcion: 'El Correo ya existe'
+    });
+
+    var hashPassword = crypto.createHash('md5').update(req.body.contrasena).digest('hex');
+    const user = new userModel({
+        nombreUsuario: req.body.nombreUsuario,
+        correo: req.body.correo,
+        contrasena: hashPassword,
+        rolId: req.body.rolId,
+        fechaCreacion: new Date(),
+        fechaActualizacion: new Date(),
+        estado: true
+
+    })
+
+    const save = await user.save();
+    try {
+        res.send(save);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({
+            error: true,
+            descripcion: error.message
+        })
+    }
+
+})
+route.get('/user/all', verifyToken, async (req, res) => {
+    try {
+        let pageNumber = req.query.page ? req.query.page * 1 : 0;
+        let query = {}
+
+        //Datos para los filtros
+        let search = req.query.search;
+        let dateCreationFrom = req.query.dateCreationFrom;
+        let dateCreationTo = req.query.dateCreationTo;
+
+        if (dateCreationFrom || dateCreationTo) {
+            query.fechaCreacion = {}
+            if (dateCreationFrom) {
+                query.fechaCreacion.$gte = new Date(new Date(dateCreationFrom).toDateString()).toISOString();
+            }
+            if (dateCreationTo) {
+                query.fechaCreacion.$lte = new Date(new Date(dateCreationTo).toDateString()).toISOString();
+            }
+        }
+
+        if (search) {
+            var regex = new RegExp(search, 'ig');
+            const or = {
+                $or: [
+                    { 'nombreUsuario': regex },
+                    { 'correo': regex },
+                ]
+            }
+            query = {
+                $and: [query, or],
+            };
+        }
+
+        const users = await userModel.find(query)
+            .skip(pageNumber > 0 ? (pageNumber * paginationSize) : 0)
+            .limit(paginationSize).sort({ fechaCreacion: -1 });
+
+        const totalUsers = await userModel.count(query);
+        res.send({ users, totalUsers })
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({
+            error: true,
+            descripcion: error.message
+        })
+    }
+})
+
+route.get('/user/:id', verifyToken, async (req, res) => {
+    const id = req.params.id;
+    const user = await userModel.findById(id);
+    try {
+        res.send(user)
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({
+            error: true,
+            descripcion: error.message
+        })
+    }
+})
+
+route.delete('/user/:id', verifyToken, async (req, res) => {
+    const userId = req.params.id;
+    const userDelete = userModel.remove({
+        _id: id
+    })
+    try {
+        res.send(userDelete)
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({
+            error: true,
+            descripcion: error.message
+        })
+    }
+
+})
+
+route.patch('/user/:id', verifyToken, async (req, res) => {
+    const userId = req.params.id;
+    var hashPassword = crypto.createHash('md5').update(req.body.contrasena).digest('hex');
+
+    const user = {
+        nombreUsuario: req.body.nombreUsuario,
+        correo: req.body.correo,
+        contrasena: hashPassword,
+        rolId: req.body.rolId,
+        fechaActualizacion: new Date(),
+    };
+    try {
+        const update = await userModel.updateOne({
+            _id: userId
+        }, {
+            $set: { ...user }
+        })
+
+        res.send(update)
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({
+            error: true,
+            descripcion: error.message
+        })
+    }
+
+})
+
+
+module.exports = route
