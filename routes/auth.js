@@ -9,7 +9,6 @@ var crypto = require('crypto');
 
 route.post('/login',async(req,res)=>{
     try {
-        console.log(req);
         const user= await userModel.findOne({correo:req.body.correo}) 
         if(!user)return res.status(400).json({ body:{
             error:"Validación Usuario",

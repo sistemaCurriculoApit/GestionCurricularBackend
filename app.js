@@ -1,6 +1,7 @@
 const express= require('express')
 const mongoose= require('mongoose')
 const env= require('dotenv/config')
+const bodyParser = require('body-parser');
 
 const port = process.env.PORT || 3000;
 
@@ -17,6 +18,7 @@ app.all(function(req, res, next) {
 });
 
 app.use(cors());
+app.use(bodyParser.json());
 
 const userRoute= require('./routes/user')
 app.use('/api/',userRoute)
