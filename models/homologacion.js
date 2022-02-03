@@ -49,8 +49,7 @@ const homologacion = mongoose.Schema({
     required: true
   },
   descripcion: {
-    type: String,
-    required: true
+    type: String
   },
   fechaActualizacion: {
     type: Date,
