@@ -205,6 +205,13 @@ route.delete('/:id', verifyToken, async (req, res) => {
 
 })
 route.patch('/:id', verifyToken, async (req, res) => {
+
+    const docenteValidar = await docenteModel.findOne({ correo: req.body.correo })
+    if (docenteValidar) return res.status(400).json({
+        error: "Validación Datos",
+        descripcion: 'El Correo ya existe'
+    }); 
+    
     const docenteId = req.params.id;
     const docente = {
         nombre: req.body.nombre,
@@ -233,12 +240,6 @@ route.patch('/:id', verifyToken, async (req, res) => {
 
 route.delete('/delete/:id', verifyToken, async (req, res) => {
 
-    const docenteValidar = await docenteModel.findOne({ correo: req.body.correo })
-    if (docenteValidar) return res.status(400).json({
-        error: "Validación Datos",
-        descripcion: 'El Correo ya existe'
-    }); 
-    
     const docenteId = req.params.id;
     const docente = {
         nombre: req.body.nombre,
