@@ -10,24 +10,12 @@ const { paginationSize } = require('../constants/constants')
 
 route.post('/add', verifyToken, async (req, res) => {
 
-    /* const schema =joi.object({
-         name:joi.string().min(5).required(),
-         mail:joi.string().min(5).required().email(),
-         password:joi.string().min(10).required()
- 
-     })
-     const err=schema.validate(req.body)
-      if(err) return res.status(400).send(err.error.details)
- 
-     const salt= await bcrypt.genSalt(10)
-     const haspassword= await bcrypt.hash(req.body.password,salt)
- console.log('paso 1')*/
-    // const usuarioValidar = await docenteModel.findOne({ idDocente: req.body.idDocente })
-    // if (usuarioValidar) return res.status(400).json({        
-    //         error: true,
-    //         descripcion: 'El usuario ya existe'
-        
-    // });
+    const docenteValidar = await docenteModel.findOne({ correo: req.body.correo })
+    if (docenteValidar) return res.status(400).json({
+        error: "Validación Datos",
+        descripcion: 'El Correo ya existe'
+    }); 
+
     const docente = new docenteModel({
         nombre: req.body.nombre,
         correo: req.body.correo,
@@ -244,6 +232,13 @@ route.patch('/:id', verifyToken, async (req, res) => {
 
 
 route.delete('/delete/:id', verifyToken, async (req, res) => {
+
+    const docenteValidar = await docenteModel.findOne({ correo: req.body.correo })
+    if (docenteValidar) return res.status(400).json({
+        error: "Validación Datos",
+        descripcion: 'El Correo ya existe'
+    }); 
+    
     const docenteId = req.params.id;
     const docente = {
         nombre: req.body.nombre,

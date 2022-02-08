@@ -26,18 +26,6 @@ route.get('/user/token', async (req, res) => {
 route.post('/user/add', verifyToken, async (req, res) => {
 
 
-    /* const schema =joi.object({
-         name:joi.string().min(5).required(),
-         mail:joi.string().min(5).required().email(),
-         password:joi.string().min(10).required()
- 
-     })
-     const err=schema.validate(req.body)
-      if(err) return res.status(400).send(err.error.details)
- 
-     const salt= await bcrypt.genSalt(10)
-     const haspassword= await bcrypt.hash(req.body.password,salt)
- console.log('paso 1')*/
     const usuarioValidar = await userModel.findOne({ correo: req.body.correo })
     if (usuarioValidar) return res.status(400).json({
         error: "Validación Datos",
@@ -148,6 +136,12 @@ route.delete('/user/:id', verifyToken, async (req, res) => {
 })
 
 route.patch('/user/:id', verifyToken, async (req, res) => {
+
+    const usuarioValidar = await userModel.findOne({ correo: req.body.correo })
+    if (usuarioValidar) return res.status(400).json({
+        error: "Validación Datos",
+        descripcion: 'El Correo ya existe'
+    });
     const userId = req.params.id;
     var hashPassword = crypto.createHash('md5').update(req.body.contrasena).digest('hex');
 
