@@ -29,7 +29,8 @@ route.post('/add', verifyToken, async (req, res) => {
             intensidadHoraria: req.body.intensidadHoraria,
             estado: true,
             contenido: req.body.contenido,
-            docente: req.body.docente
+            docente: req.body.docente,
+            equivalencia: req.body.equivalencia
         })
 
         const asignaturaSaved = await asignatura.save()

@@ -56,6 +56,9 @@ app.use('/api/homologacion/',homologacionRoute)
 const avanceRoute= require('./routes/avance')
 app.use('/api/avance/',avanceRoute) 
 
+const equivalenciaRoute = require('./routes/equivalencias')
+app.use('/api/equivalencia/', equivalenciaRoute)
+
 app.listen(port,()=>{
  console.log('server is running'+port)
 })
