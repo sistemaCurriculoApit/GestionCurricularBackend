@@ -56,11 +56,11 @@ app.use('/api/homologacion/',homologacionRoute)
 const avanceRoute= require('./routes/avance')
 app.use('/api/avance/',avanceRoute) 
 
-const equivalenciaRoute = require('./routes/equivalencias')
+const equivalenciaRoute = require('./routes/equivalencia')
 app.use('/api/equivalencia/', equivalenciaRoute)
 
 app.listen(port,()=>{
- console.log('server is running'+port)
+ console.log('server is running '+port)
 })
 
 mongoose.connect(process.env.BD,{useNewUrlParser:true,useUnifiedTopology:true},(err)=>{

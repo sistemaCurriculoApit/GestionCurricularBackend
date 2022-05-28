@@ -3,6 +3,7 @@ const equivalenciaModel = require('../models/equivalencia')
 const asignaturaModel = require('../models/asignatura')
 const route = express.Router()
 const verifyToken = require('./validarToken')
+const { paginationSize } = require('../constants/constants')
 
 route.post('/add', verifyToken, async(req, res) => {
     try{
@@ -130,6 +131,42 @@ route.get('/all', verifyToken, async (req, res) => {
     }
 })
 
+route.get('/allNotPaginated', verifyToken, async (req, res) => {
+    try {
+        let query = {}
+
+        //Datos para los filtros
+        let search = req.query.search;
+        if (search) {
+            var regex = new RegExp(search, 'ig');
+            const or = {
+                $or: [
+                    { 'sourceCourseName': regex },
+                    { 'sourceCourseCode': regex },
+                ]
+            }
+            query = {
+                $and: [query, or],
+            };
+        }
+
+        const equivalencias = await equivalenciaModel.find(query);
+        // const totalEquivalencias = await equivalenciaModel.count(query);
+        res.status(200).json({
+            error: false,
+            descripcion: "Consulta Exitosa",
+            equivalencias: equivalencias,
+            // totalEquivalencias
+        })
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({
+            error: true,
+            descripcion: error.message
+        })
+    }
+})
+
 route.get('/:id', verifyToken, async (req, res) => {
     try {
         const id = req.params.id;
@@ -160,42 +197,6 @@ route.get('/:id', verifyToken, async (req, res) => {
 })
 
 
-route.get('/allNotPaginated', verifyToken, async (req, res) => {
-    try {
-        let query = {}
-
-        //Datos para los filtros
-        let search = req.query.search;
-        if (search) {
-            var regex = new RegExp(search, 'ig');
-            const or = {
-                $or: [
-                    { 'sourceCourseName': regex },
-                    { 'sourceCourseCode': regex },
-                ]
-            }
-            query = {
-                $and: [query, or],
-            };
-        }
-
-        const equivalencias = await equivalenciaModel.find(query)
-        const totalEquivalencias = await equivalenciaModel.count(query);
-        res.status(200).json({
-            error: false,
-            descripcion: "Consulta Exitosa",
-            equivalencias: equivalencias,
-            totalEquivalencias
-        })
-    } catch (error) {
-        console.error(error);
-        res.status(500).json({
-            error: true,
-            descripcion: error.message
-        })
-    }
-})
-
 route.post('/getEquivalenciaByAsignatura', verifyToken, async (req, res) => {
     try {
         let query = {}
@@ -203,7 +204,7 @@ route.post('/getEquivalenciaByAsignatura', verifyToken, async (req, res) => {
         //Datos para los filtros
         let search = req.body.search;
 
-        const asignaturas = await asignaturaModel.find({ _id: { $in: req.body.asignaturasIds } });
+        const asignaturas = await equivalenciaModel.find({ _id: { $in: req.body.asignaturasIds } });
         let equivalenciasIds = [];
         if (asignaturas.length) {
             for (let i = 0; i < asignaturas.length; i++) {
