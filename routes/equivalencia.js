@@ -1,6 +1,5 @@
 const express = require('express')
 const equivalenciaModel = require('../models/equivalencia')
-const asignaturaModel = require('../models/asignatura')
 const route = express.Router()
 const verifyToken = require('./validarToken')
 const { paginationSize } = require('../constants/constants')
@@ -204,47 +203,17 @@ route.post('/getEquivalenciaByAsignatura', verifyToken, async (req, res) => {
         //Datos para los filtros
         let search = req.body.search;
 
-        const asignaturas = await equivalenciaModel.find({ _id: { $in: req.body.asignaturasIds } });
-        let equivalenciasIds = [];
-        if (asignaturas.length) {
-            for (let i = 0; i < asignaturas.length; i++) {
-                equivalenciasIds.push(...asignaturas[i].equivalencia.map((equivalencia) => equivalencia._id));
-            }
+        if (req.body.equivalenciasIds) {
+            query = { _id: { $in: req.body.equivalenciasIds } }
         }
-        if (!equivalenciasIds.length) {
-            res.status(200).json({
-                error: false,
-                descripcion: "Consulta Exitosa",
-                equivalencia: []
-            })
-            return
-        } else {
-            if (equivalenciasIds) {
-                query = { _id: { $in: equivalenciasIds } }
-            }
-            if (search) {
-                var regex = new RegExp(search, 'ig');
-                const or = {
-                    $or: [
-                        { 'sourceCourseCode': regex },
-                        { 'sourceCourseName': regex }
-                    ]
-                }
-                query = {
-                    $and: [query, or],
-                };
-            }
 
+        const equivalencias = await equivalenciaModel.find(query);
 
-
-            const equivaliencias = await equivalenciaModel.find(query);
-            res.status(200).json({
-                error: false,
-                descripcion: "Consulta Exitosa",
-                equivalencia: equivaliencias
-            })
-
-        }
+        res.status(200).json({
+            error: false,
+            descripcion: "Consulta Exitosa",
+            equivalencias: equivalencias
+        })
 
     } catch (error) {
         console.error(error);
