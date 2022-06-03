@@ -1,3 +1,4 @@
+//unused collection
 const mongoose=require('mongoose')
 
 const equivalencia=mongoose.Schema({

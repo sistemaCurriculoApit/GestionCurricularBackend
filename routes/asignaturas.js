@@ -1,6 +1,8 @@
 const express = require('express')
+const mongoose= require('mongoose')
 const asignaturaModel = require('../models/asignatura')
 const areaModel = require('../models/area')
+const planModel = require('../models/plan')
 const route = express.Router()
 const jwt = require('jsonwebtoken')
 const verify = require('./validarToken')
@@ -101,6 +103,58 @@ route.get('/all', verifyToken, async (req, res) => {
     }
 })
 
+route.get('/allNotPaginatedWithPlanCode', verifyToken, async (req, res) => {
+    try {
+        let query = {}
+
+        //Datos para los filtros
+        let search = req.query.search;
+
+        if (search) {
+            var regex = new RegExp(search, 'ig');
+            const or = {
+                $or: [
+                    { 'codigo': regex },
+                    { 'nombre': regex },
+                    { 'descripcion': regex },
+                ]
+            }
+            query = {
+                $and: [query, or],
+            };
+        }
+
+        const asignaturas = await asignaturaModel.find(query);
+        var newAsignaturas = [];
+        if (asignaturas.length) {
+            for (let i = 0; i < asignaturas.length; i++) {
+                const area = await areaModel.findOne({ 'asignatura.id' : asignaturas[i]._id });
+                if (area){
+                    const plan = await planModel.findOne({'area.id' : area._id})
+                    if(plan){
+                        var asignaturaObj = {
+                            asignatura: asignaturas[i],
+                            codigoPlan: plan.codigo
+                        }
+                        newAsignaturas.push(asignaturaObj)
+                    }
+                }
+            }
+        }
+        res.status(200).json({
+            error: false,
+            descripcion: "Consulta Exitosa",
+            asignaturas: newAsignaturas
+        })
+    }catch (error) {
+        console.error(error);
+        res.status(500).json({
+            error: true,
+            descripcion: error.message
+        })
+    }
+})
+
 route.get('/allNotPaginated', verifyToken, async (req, res) => {
     try {
         let query = {}
@@ -128,7 +182,7 @@ route.get('/allNotPaginated', verifyToken, async (req, res) => {
             descripcion: "Consulta Exitosa",
             asignaturas: asignaturas
         })
-    } catch (error) {
+    }catch (error) {
         console.error(error);
         res.status(500).json({
             error: true,
@@ -377,6 +431,78 @@ route.patch('/:id', verifyToken, async (req, res) => {
         })
     }
 
+})
+
+route.post('/getEquivalenciaByAsignatura', verifyToken, async (req, res) => {
+    try {
+        let query = {}
+
+        //Datos para los filtros
+        let search = req.body.search;
+
+        if (req.body.equivalenciasIds) {
+            query = { _id: { $in: req.body.equivalenciasIds } }
+        }
+
+        const equivalencias = await asignaturaModel.find(query);
+        var newEquivalenciasList = [];
+        if (equivalencias.length) {
+            for (let i = 0; i < equivalencias.length; i++) {
+                const area = await areaModel.findOne({ 'asignatura.id' : equivalencias[i]._id });
+                if (area){
+                    const plan = await planModel.findOne({'area.id' : area._id})
+                    if(plan){
+                        var equivalenciaObj = {
+                            equivalencia: equivalencias[i],
+                            codigoPlan: plan.codigo
+                        }
+                        newEquivalenciasList.push(equivalenciaObj)
+                    }
+                }
+            }
+        }
+
+        res.status(200).json({
+            error: false,
+            descripcion: "Consulta Exitosa",
+            equivalencias: newEquivalenciasList
+        })
+
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({
+            error: true,
+            descripcion: error.message
+        })
+    }
+})
+
+route.post('/getEquivalenciaByAsignaturaNT', async (req, res) => {
+    try {
+        let query = {}
+
+        //Datos para los filtros
+        let search = req.body.search;
+
+        if (req.body.equivalenciasIds) {
+            query = { _id: { $in: req.body.equivalenciasIds } }
+        }
+
+        const equivalencias = await asignaturaModel.find(query);
+
+        res.status(200).json({
+            error: false,
+            descripcion: "Consulta Exitosa",
+            equivalencias: equivalencias
+        })
+
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({
+            error: true,
+            descripcion: error.message
+        })
+    }
 })
 
 

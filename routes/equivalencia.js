@@ -208,7 +208,6 @@ route.post('/getEquivalenciaByAsignatura', verifyToken, async (req, res) => {
         }
 
         const equivalencias = await equivalenciaModel.find(query);
-
         res.status(200).json({
             error: false,
             descripcion: "Consulta Exitosa",

@@ -2,7 +2,6 @@ const { string } = require('@hapi/joi')
 const mongoose=require('mongoose')
 const contenido=require('../models/contenido')
 const docente= require('../models/docente')
-const equivalencia = require('../models/equivalencia')
 const asignatura=mongoose.Schema({
     nombre:{
         type:String,
@@ -46,12 +45,7 @@ const asignatura=mongoose.Schema({
             ref:docente
         }
     }],
-    equivalencia:[{
-        _id:{
-            type:mongoose.Schema.ObjectId,
-            ref:equivalencia
-        }
-    }]
+    equivalencia:[ this ]
 })
 
 module.exports=mongoose.model('Asignatura',asignatura)
