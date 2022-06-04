@@ -40,6 +40,10 @@ const homologacion = mongoose.Schema({
     type: Date,
     required: true,
   },
+  fechaDecision: {
+    type: Date,
+    required: false,
+  },
   periodo: {
     type: String,
     required: true

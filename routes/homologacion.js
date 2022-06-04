@@ -13,6 +13,9 @@ const { paginationSize } = require('../constants/constants')
 
 route.post('/add', verifyToken, async (req, res) => {
   try {
+
+    let estado = req.body.estadoHomologacion ? parseInt(req.body.estadoHomologacion):0;
+
     const homologacion = new homologacionModel({
       programaId: req.body.programaId,
       planId: req.body.planId,
@@ -24,7 +27,8 @@ route.post('/add', verifyToken, async (req, res) => {
       asignaturaSolicitante: req.body.asignaturaSolicitante,
       añoHomologacion: req.body.añoHomologacion,
       periodo: req.body.periodo,
-      estadoHomologacion: req.body.estadoHomologacion ? parseInt(req.body.estadoHomologacion):0,
+      estadoHomologacion: estado,
+      fechaDecision: estado === 2 ? req.body.fechaDecision : null,
       descripcion: req.body.descripcion,
       fechaActualizacion: new Date(),
       fechaCreacion: new Date(),
@@ -219,6 +223,7 @@ route.delete('/:id', verifyToken, async (req, res) => {
 route.patch('/:id', verifyToken, async (req, res) => {
   try {
     const id = req.params.id;
+    let estado = req.body.estadoHomologacion ? parseInt(req.body.estadoHomologacion):0;
     const homologacion = {
       programaId: req.body.programaId,
       planId: req.body.planId,
@@ -230,7 +235,8 @@ route.patch('/:id', verifyToken, async (req, res) => {
       asignaturaSolicitante: req.body.asignaturaSolicitante,
       añoHomologacion: req.body.añoHomologacion,
       periodo: req.body.periodo,
-      estadoHomologacion: req.body.estadoHomologacion ? parseInt(req.body.estadoHomologacion):0,
+      estadoHomologacion: estado,
+      fechaDecision: estado !== 2 ? req.body.fechaDecision : null,
       descripcion: req.body.descripcion,
       fechaActualizacion: new Date(),
     };
