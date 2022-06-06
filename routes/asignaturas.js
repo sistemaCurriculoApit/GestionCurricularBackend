@@ -128,13 +128,26 @@ route.get('/allNotPaginatedWithPlanCode', verifyToken, async (req, res) => {
         var newAsignaturas = [];
         if (asignaturas.length) {
             for (let i = 0; i < asignaturas.length; i++) {
-                const area = await areaModel.findOne({ 'asignatura.id' : asignaturas[i]._id });
-                if (area){
-                    const plan = await planModel.findOne({'area.id' : area._id})
+                const area = await areaModel.find({ 'asignatura._id' : asignaturas[i]._id });
+                if (area && area[0]){
+                    var plan;
+                    if (area[1]){
+                        plan = await planModel.find({'area._id' : area[1]._id})
+                    }else {
+                        plan = await planModel.find({'area._id' : area[0]._id})
+                    }
                     if(plan){
-                        var asignaturaObj = {
-                            asignatura: asignaturas[i],
-                            codigoPlan: plan.codigo
+                        var asignaturaObj;
+                        if (plan[1]){
+                            asignaturaObj = {
+                                asignatura: asignaturas[i],
+                                codigoPlan: plan[1].codigo
+                            }
+                        }else{
+                            asignaturaObj = {
+                                asignatura: asignaturas[i],
+                                codigoPlan: plan[0].codigo
+                            }
                         }
                         newAsignaturas.push(asignaturaObj)
                     }
