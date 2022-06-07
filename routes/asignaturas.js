@@ -461,18 +461,32 @@ route.post('/getEquivalenciaByAsignatura', verifyToken, async (req, res) => {
         var newEquivalenciasList = [];
         if (equivalencias.length) {
             for (let i = 0; i < equivalencias.length; i++) {
-                const area = await areaModel.findOne({ 'asignatura.id' : equivalencias[i]._id });
+                const area = await areaModel.find({ 'asignatura._id' : equivalencias[i]._id });
                 if (area){
-                    const plan = await planModel.findOne({'area.id' : area._id})
+                    var plan;
+                    if (area[1]){
+                        plan = await planModel.find({'area._id' : area[1]._id})
+                    }else {
+                        plan = await planModel.find({'area._id' : area[0]._id})
+                    }
                     if(plan){
-                        var equivalenciaObj = {
-                            equivalencia: equivalencias[i],
-                            codigoPlan: plan.codigo
+                        var equivalenciaObj;
+                        if (plan[1]){
+                            equivalenciaObj = {
+                                equivalencia: equivalencias[i],
+                                codigoPlan: plan[1].codigo
+                            }
+                        }else{
+                            equivalenciaObj = {
+                                equivalencia: equivalencias[i],
+                                codigoPlan: plan[0].codigo
+                            }
                         }
                         newEquivalenciasList.push(equivalenciaObj)
                     }
                 }
             }
+            
         }
 
         res.status(200).json({
