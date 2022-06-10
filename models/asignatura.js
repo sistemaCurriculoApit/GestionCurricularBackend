@@ -1,4 +1,3 @@
-const { string } = require('@hapi/joi')
 const mongoose=require('mongoose')
 const contenido=require('../models/contenido')
 const docente= require('../models/docente')
@@ -29,9 +28,62 @@ const asignatura=mongoose.Schema({
         type:Number,
         required:true
     },
-    intensidadHoraria:{
+    intensidadHorariaPractica:{
+        type:Number,
+        required:true
+    },
+    intensidadHorariaTeorica:{
+        type:Number,
+        required:true
+    },
+    intensidadHorariaIndependiente:{
+        type:Number,
+        required:true
+    },
+    intensidadHorariaTotal:{
+        type:Number,
+        required:true
+    },
+    intensidadHorariaRelacion:{
         type:String,
         required:true
+    },
+    prerrequisitos:{
+        type:String
+    },
+    correquisitos:{
+        type:String
+    },
+    asignaturaTipo:{
+        type: Number,
+        required: true
+    },
+    presentacionAsignatura:{
+        type:String
+    },
+    justificacionAsignatura:{
+        type:String
+    },
+    objetivoGeneral:{
+        type:String
+    },
+    objetivosEspecificos:{
+        type:String
+    },
+    competencias:{
+        type:String
+    },
+    mediosEducativos:{
+        type:String
+    },
+    evaluacion:{
+        type:String
+    },
+    bibliografia:{
+        type:String
+    },
+    cibergrafia:{
+        type:String
     },
     contenido:[{
         _id:{

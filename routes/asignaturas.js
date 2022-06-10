@@ -5,7 +5,6 @@ const areaModel = require('../models/area')
 const planModel = require('../models/plan')
 const route = express.Router()
 const jwt = require('jsonwebtoken')
-const verify = require('./validarToken')
 const verifyToken = require('./validarToken')
 const { paginationSize } = require('../constants/constants')
 const area = require('../models/area')
@@ -20,6 +19,11 @@ route.post('/add', verifyToken, async (req, res) => {
             descripcion: 'El código ya existe'
         });
 
+        let hPractica = req.body.intensidadHorariaPractica ? parseInt(req.body.intensidadHorariaPractica):0;
+        let hTeorica = req.body.intensidadHorariaTeorica ? parseInt(req.body.intensidadHorariaTeorica) : 0;
+        let hIndependiente = req.body.intensidadHorariaIndependiente ? parseInt(req.body.intensidadHorariaIndependiente) : 0;
+        let hTotal = hPractica + hTeorica + hIndependiente
+        let hTotalRelacion = `${hPractica+hTeorica}/${hIndependiente}`
 
         const asignatura = new asignaturaModel({
             nombre: req.body.nombre,
@@ -28,8 +32,24 @@ route.post('/add', verifyToken, async (req, res) => {
             cantidadCredito: req.body.cantidadCredito,
             fechaActualizacion: new Date(),
             fechaCreacion: new Date(),
-            intensidadHoraria: req.body.intensidadHoraria,
+            intensidadHorariaPractica: hPractica,
+            intensidadHorariaTeorica: hTeorica,
+            intensidadHorariaIndependiente: hIndependiente,
+            intensidadHorariaTotal: hTotal,
+            intensidadHorariaRelacion: hTotalRelacion,
             estado: true,
+            prerrequisitos: req.body.prerrequisitos,
+            correquisitos: req.body.correquisitos,
+            asignaturaTipo: req.body.asignaturaTipo,
+            presentacionAsignatura: req.body.presentacionAsignatura,
+            justificacionAsignatura: req.body.justificacionAsignatura,
+            objetivoGeneral: req.body.objetivoGeneral,
+            objetivosEspecificos: req.body.objetivosEspecificos,
+            competencias: req.body.competencias,
+            mediosEducativos: req.body.mediosEducativos,
+            evaluacion: req.body.evaluacion,
+            bibliografia: req.body.bibliografia,
+            cibergrafia: req.body.cibergrafia,
             contenido: req.body.contenido,
             docente: req.body.docente,
             equivalencia: req.body.equivalencia
@@ -38,7 +58,7 @@ route.post('/add', verifyToken, async (req, res) => {
         const asignaturaSaved = await asignatura.save()
         res.status(200).json({
             error: false,
-            descripcion: "Registro Alamcenado Exitosamente",
+            descripcion: "Registro Almacenado Exitosamente",
             asignatura: asignaturaSaved
 
         })
@@ -421,7 +441,7 @@ route.patch('/:id', verifyToken, async (req, res) => {
         const asignaturaValidar = await asignaturaModel.findOne({ codigo: req.body.codigo })
         if (asignaturaValidar && asignaturaValidar._id.toString() !== req.params.id) return res.status(400).json({
             error: "Validacion Datos",
-            descripcion: 'El código ya existe'
+            descripcion: 'El código no existe'
         });
 
 
