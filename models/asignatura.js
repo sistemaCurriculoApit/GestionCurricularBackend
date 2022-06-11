@@ -40,7 +40,7 @@ const asignatura=mongoose.Schema({
         type:Number,
         required:true
     },
-    intensidadHorariaTotal:{
+    intensidadHoraria:{
         type:Number,
         required:true
     },
