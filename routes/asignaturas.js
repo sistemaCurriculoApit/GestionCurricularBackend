@@ -22,7 +22,12 @@ route.post('/add', verifyToken, async (req, res) => {
         let hPractica = req.body.intensidadHorariaPractica ? parseInt(req.body.intensidadHorariaPractica):0;
         let hTeorica = req.body.intensidadHorariaTeorica ? parseInt(req.body.intensidadHorariaTeorica) : 0;
         let hIndependiente = req.body.intensidadHorariaIndependiente ? parseInt(req.body.intensidadHorariaIndependiente) : 0;
-        let hTotal = hPractica + hTeorica + hIndependiente
+        if (req.body.asignaturaTipo === 0){
+            hPractica = 0;
+        }else if (req.body.asignaturaTipo === 1){
+            hPractica= 0;
+        }
+        let hTotal = hTeorica+hPractica+hIndependiente
         let hTotalRelacion = `${hPractica+hTeorica}/${hIndependiente}`
 
         const asignatura = new asignaturaModel({
@@ -35,7 +40,7 @@ route.post('/add', verifyToken, async (req, res) => {
             intensidadHorariaPractica: hPractica,
             intensidadHorariaTeorica: hTeorica,
             intensidadHorariaIndependiente: hIndependiente,
-            intensidadHorariaTotal: hTotal,
+            intensidadHoraria: hTotal,
             intensidadHorariaRelacion: hTotalRelacion,
             estado: true,
             prerrequisitos: req.body.prerrequisitos,
@@ -444,6 +449,19 @@ route.patch('/:id', verifyToken, async (req, res) => {
             descripcion: 'El código no existe'
         });
 
+        let hPractica = req.body.intensidadHorariaPractica ? parseInt(req.body.intensidadHorariaPractica):0;
+        let hTeorica = req.body.intensidadHorariaTeorica ? parseInt(req.body.intensidadHorariaTeorica) : 0;
+        let hIndependiente = req.body.intensidadHorariaIndependiente ? parseInt(req.body.intensidadHorariaIndependiente) : 0;
+        if (req.body.asignaturaTipo === 0){
+            hPractica = 0;
+        }else if (req.body.asignaturaTipo === 1){
+            hPractica= 0;
+        }
+        let hTotal = hTeorica+hPractica+hIndependiente
+        let hTotalRelacion = `${hPractica+hTeorica}/${hIndependiente}`
+
+        req.body.intensidadHorariaRelacion = hTotalRelacion;
+        req.body.intensidadHoraria  = hTotal;
 
         const update = await asignaturaModel.updateOne({
             _id: id
