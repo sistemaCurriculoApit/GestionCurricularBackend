@@ -9,6 +9,8 @@ const verifyToken = require('./validarToken')
 const { paginationSize } = require('../constants/constants')
 const area = require('../models/area')
 
+const TemplateHtml = require('../constants/templateConstant')
+
 
 
 route.post('/add', verifyToken, async (req, res) => {
@@ -570,5 +572,47 @@ route.post('/getEquivalenciaByAsignaturaNT', async (req, res) => {
     }
 })
 
+
+route.post('/getFile', async (req, res) => {
+    var html_to_pdf = require('html-pdf-node');
+    var pdf = require('html-pdf');
+
+    let options = { format: 'A4' };
+    // Example of options with args //
+    // let options = { format: 'A4', args: ['--no-sandbox', '--disable-setuid-sandbox'] };
+
+    let fileString = TemplateHtml.module.toString();
+    fileString = fileString.replace('[asignatura]', req.body.nombre)
+    fileString = fileString.replace('[prerrequisitos]', req.body.prerrequisitos)
+    fileString = fileString.replace('[correquisitos]', req.body.correquisitos)
+    fileString = fileString.replace('[horas_teorica]', req.body.intensidadHorariaTeorica)
+    fileString = fileString.replace('[horas_teorica]', req.body.intensidadHorariaTeorica)
+    fileString = fileString.replace('[horas_practica]', req.body.intensidadHorariaPractica)
+    fileString = fileString.replace('[horas_practica]', req.body.intensidadHorariaPractica)
+    fileString = fileString.replace('[horas_independiente]', req.body.intensidadHorariaIndependiente)
+    fileString = fileString.replace('[horas_total]', req.body.intensidadHoraria)
+    fileString = fileString.replace('[creditos]', req.body.cantidadCredito)
+    fileString = fileString.replace('[htp_hti]', req.body.intensidadHorariaRelacion)
+    fileString = fileString.replace('[presentacion]', req.body.presentacionAsignatura)
+    fileString = fileString.replace('[presentacion]', req.body.presentacionAsignatura)
+    fileString = fileString.replace('[justificacion]', req.body.justificacionAsignatura)
+    fileString = fileString.replace('[objetivo_general]', req.body.objetivoGeneral)
+    fileString = fileString.replace('[objetivos_especificos]', req.body.objetivosEspecificos)
+    fileString = fileString.replace('[competencias]', req.body.competencias)
+    fileString = fileString.replace('[medios]', req.body.mediosEducativos)
+    fileString = fileString.replace('[evaluacion]', req.body.evaluacion)
+    fileString = fileString.replace('[bibliografia]', req.body.bibliografia)
+    fileString = fileString.replace('[cibergrafia]', req.body.cibergrafia)
+    var config = {format: 'A4'};
+    pdf.create(fileString, config).toFile('pathtooutput/FD-GC70.pdf', function (err, res) {
+        if (err) return console.log(err);
+        console.log(res); // { filename: '/pathtooutput/generated.pdf' }
+     });
+    res.status(200).json({
+        error: false,
+        descripcion: "Consulta Exitosa",
+        equivalencias: "s"
+    })
+})
 
 module.exports = route
