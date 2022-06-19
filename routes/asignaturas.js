@@ -3,11 +3,11 @@ const mongoose= require('mongoose')
 const asignaturaModel = require('../models/asignatura')
 const areaModel = require('../models/area')
 const planModel = require('../models/plan')
+const programaModel = require('../models/programa')
 const route = express.Router()
 const jwt = require('jsonwebtoken')
 const verifyToken = require('./validarToken')
 const { paginationSize } = require('../constants/constants')
-const area = require('../models/area')
 
 const TemplateHtml = require('../constants/templateConstant')
 
@@ -574,36 +574,77 @@ route.post('/getEquivalenciaByAsignaturaNT', async (req, res) => {
 
 
 route.post('/getFile', async (req, res) => {
-    var html_to_pdf = require('html-pdf-node');
     var pdf = require('html-pdf');
 
-    let options = { format: 'A4' };
-    // Example of options with args //
-    // let options = { format: 'A4', args: ['--no-sandbox', '--disable-setuid-sandbox'] };
+    //Se obtienen datos necesarios que no llegan en el request para llenado de platilla
+    const area = await areaModel.findOne({ 'asignatura._id' : req.body._id });
+    let plan;
+    let programa;
+    if (area)
+    {
+        plan = await planModel.findOne({'area._id' : area._id})
+        if (plan)
+        {
+            programa = await programaModel.findOne({'plan._id' : plan._id})
+        }
+    }
 
+    //Se obtiene la plantilla del modulo templateHtml
     let fileString = TemplateHtml.module.toString();
-    fileString = fileString.replace('[asignatura]', req.body.nombre)
-    fileString = fileString.replace('[prerrequisitos]', req.body.prerrequisitos)
-    fileString = fileString.replace('[correquisitos]', req.body.correquisitos)
-    fileString = fileString.replace('[horas_teorica]', req.body.intensidadHorariaTeorica)
-    fileString = fileString.replace('[horas_teorica]', req.body.intensidadHorariaTeorica)
-    fileString = fileString.replace('[horas_practica]', req.body.intensidadHorariaPractica)
-    fileString = fileString.replace('[horas_practica]', req.body.intensidadHorariaPractica)
-    fileString = fileString.replace('[horas_independiente]', req.body.intensidadHorariaIndependiente)
-    fileString = fileString.replace('[horas_total]', req.body.intensidadHoraria)
-    fileString = fileString.replace('[creditos]', req.body.cantidadCredito)
-    fileString = fileString.replace('[htp_hti]', req.body.intensidadHorariaRelacion)
-    fileString = fileString.replace('[presentacion]', req.body.presentacionAsignatura)
-    fileString = fileString.replace('[presentacion]', req.body.presentacionAsignatura)
-    fileString = fileString.replace('[justificacion]', req.body.justificacionAsignatura)
-    fileString = fileString.replace('[objetivo_general]', req.body.objetivoGeneral)
-    fileString = fileString.replace('[objetivos_especificos]', req.body.objetivosEspecificos)
-    fileString = fileString.replace('[competencias]', req.body.competencias)
-    fileString = fileString.replace('[medios]', req.body.mediosEducativos)
-    fileString = fileString.replace('[evaluacion]', req.body.evaluacion)
-    fileString = fileString.replace('[bibliografia]', req.body.bibliografia)
-    fileString = fileString.replace('[cibergrafia]', req.body.cibergrafia)
-    var config = {format: 'A4'};
+    
+    //Llenado de data en la plantilla html con datos de la asignatura.
+    //programa data
+    fileString = fileString.replace('[programa]', programa.nombre ?? '')
+    
+    //area data
+    fileString = fileString.replace('[area]', area.nombre ?? '')
+    fileString = fileString.replace('[codigo]', area.codigo ?? '')
+    
+    //asignatura data
+    fileString = fileString.replace('[asignatura]', req.body.nombre ?? '')
+    fileString = fileString.replace('[prerrequisitos]', req.body.prerrequisitos ?? '')
+    fileString = fileString.replace('[correquisitos]', req.body.correquisitos ?? '')
+
+    //Se ejecuta dos veces dado que la plantilla los campos horas_teorica y horas_practica estan dos veces
+    for (let i = 0; i < 2; i++) {
+        fileString = fileString.replace('[horas_teorica]', req.body.intensidadHorariaTeorica ?? '')
+        fileString = fileString.replace('[horas_practica]', req.body.intensidadHorariaPractica ?? '')
+    }
+    fileString = fileString.replace('[horas_independiente]', req.body.intensidadHorariaIndependiente ?? '')
+    fileString = fileString.replace('[horas_total]', req.body.intensidadHoraria ?? '')
+    fileString = fileString.replace('[creditos]', req.body.cantidadCredito ?? '')
+    fileString = fileString.replace('[htp_hti]', req.body.intensidadHorariaRelacion ?? '')
+    fileString = fileString.replace('[presentacion]', req.body.presentacionAsignatura ?? '')
+    fileString = fileString.replace('[presentacion]', req.body.presentacionAsignatura ?? '')
+    fileString = fileString.replace('[justificacion]', req.body.justificacionAsignatura ?? '')
+    fileString = fileString.replace('[objetivo_general]', req.body.objetivoGeneral ?? '')
+    fileString = fileString.replace('[objetivos_especificos]', req.body.objetivosEspecificos ?? '')
+    fileString = fileString.replace('[competencias]', req.body.competencias ?? '')
+    fileString = fileString.replace('[medios]', req.body.mediosEducativos ?? '')
+    fileString = fileString.replace('[evaluacion]', req.body.evaluacion ?? '')
+    fileString = fileString.replace('[bibliografia]', req.body.bibliografia ?? '')
+    fileString = fileString.replace('[cibergrafia]', req.body.cibergrafia ?? '')
+
+    //Contenido data. Se ejecuta 6 veces dada la cantidad de contenidos de la plantilla. Max 6
+    for (let i=0; i < 6; i++){
+        if (req.body.contenido[i]){
+            fileString = fileString.replace(`[tema_${i+1}]`, req.body.contenido[i].nombre ?? '' )
+            fileString = fileString.replace(`[subtemas_${i+1}]`, req.body.contenido[i].descripcion ?? '')
+        }else{
+            fileString = fileString.replace(`[tema_${i+1}]`, '' )
+            fileString = fileString.replace(`[subtemas_${i+1}]`, '')
+        }
+    }
+
+    //Config pdf
+    var config = {format: 'A4', 
+        border: {
+            top: "0.2in",
+            right: "0.4in",
+            bottom: "0.2in",
+            left: "0.4in"
+        },
+    };
     pdf.create(fileString, config).toFile('pathtooutput/FD-GC70.pdf', function (err, res) {
         if (err) return console.log(err);
         console.log(res); // { filename: '/pathtooutput/generated.pdf' }
@@ -611,7 +652,7 @@ route.post('/getFile', async (req, res) => {
     res.status(200).json({
         error: false,
         descripcion: "Consulta Exitosa",
-        equivalencias: "s"
+        file: "stream!"
     })
 })
 
