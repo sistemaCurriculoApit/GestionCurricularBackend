@@ -645,15 +645,19 @@ route.post('/getFile', async (req, res) => {
             left: "0.4in"
         },
     };
-    pdf.create(fileString, config).toFile('pathtooutput/FD-GC70.pdf', function (err, res) {
+    pdf.create(fileString, config).toStream(function (err, pdfStream) {
         if (err) return console.log(err);
-        console.log(res); // { filename: '/pathtooutput/generated.pdf' }
+        else{
+            res.status(200)
+            pdfStream.on('end', ()=> {
+                return res.end()
+            })
+            console.log(pdfStream.pipe); 
+            res.attachment('FD-GC70.pdf')
+            pdfStream.pipe(res)
+            console.log(res)
+        }
      });
-    res.status(200).json({
-        error: false,
-        descripcion: "Consulta Exitosa",
-        file: "stream!"
-    })
 })
 
 module.exports = route
