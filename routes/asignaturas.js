@@ -594,11 +594,21 @@ route.post('/getFile', async (req, res) => {
     
     //Llenado de data en la plantilla html con datos de la asignatura.
     //programa data
-    fileString = fileString.replace('[programa]', programa.nombre ?? '')
+    if (programa){
+        fileString = fileString.replace('[programa]', programa.nombre ?? '')
+    }else{
+        fileString = fileString.replace('[programa]', '')   
+    }
     
     //area data
-    fileString = fileString.replace('[area]', area.nombre ?? '')
-    fileString = fileString.replace('[codigo]', area.codigo ?? '')
+    if(area){
+        fileString = fileString.replace('[area]', area.nombre ?? '')
+        fileString = fileString.replace('[codigo]', area.codigo ?? '')
+    }else{
+        fileString = fileString.replace('[area]', '')
+        fileString = fileString.replace('[codigo]',  '')
+    }
+
     
     //asignatura data
     fileString = fileString.replace('[asignatura]', req.body.nombre ?? '')
