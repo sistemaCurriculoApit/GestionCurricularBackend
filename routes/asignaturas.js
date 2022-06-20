@@ -662,10 +662,8 @@ route.post('/getFile', async (req, res) => {
             pdfStream.on('end', ()=> {
                 return res.end()
             })
-            console.log(pdfStream.pipe); 
             res.attachment('FD-GC70.pdf')
             pdfStream.pipe(res)
-            console.log(res)
         }
      });
 })
