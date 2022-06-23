@@ -14,6 +14,10 @@ constant.userProfilesObject={
   doc:{
     id:3,
     title:'Docente',
+  },
+  est:{
+    id:4,
+    title:'Estudiante',
   }
 }
 constant.userProfilesArray=[
@@ -28,6 +32,10 @@ constant.userProfilesArray=[
   {
     id:3,
     title:'Docente',
+  },
+  {
+    id:4,
+    title:'Estudiante'
   }
 ]
 
