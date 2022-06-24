@@ -1,14 +1,17 @@
 const express = require('express')
 const userModel = require('../models/user')
+const estudianteModel = require('../models/estudiante')
 const route = express.Router()
 const joi = require('@hapi/joi')
 const bcrypt = require('bcrypt')
 const jwt = require('jsonwebtoken')
 const verify = require('./validarToken')
 const verifyToken = require('./validarToken')
-const { paginationSize } = require('../constants/constants')
+const { paginationSize, userProfilesObject } = require('../constants/constants')
 
 var crypto = require('crypto');
+const user = require('../models/user')
+const estudiante = require('../models/estudiante')
 
 route.get('/home', (req, res) => {
     res.json({
@@ -24,13 +27,33 @@ route.get('/user/token', async (req, res) => {
     res.send(token)
 })
 route.post('/user/add', verifyToken, async (req, res) => {
-
-
     const usuarioValidar = await userModel.findOne({ correo: req.body.correo })
     if (usuarioValidar) return res.status(400).json({
         error: "Validación Datos",
         descripcion: 'El Correo ya existe'
     });
+
+    if (req.body.rolId === userProfilesObject.est.id){
+        const estudiante = new estudianteModel({
+            identificacion: req.body.identificacionEstudiante,
+            nombre: req.body.nombreUsuario,
+            universidad: req.body.universidadEstudiante,
+            programa: req.body.programa,
+            correo : req.body.correo,
+            fechaActualizacion: new Date(),
+            fechaCreacion: new Date(),
+            estado: true,
+        })
+        try{
+            const saveEstudiante = await estudiante.save();
+        }
+        catch (error){
+            return res.status(500).json({
+                error:true,
+                descripcion: error.message
+            })
+        }
+    }
 
     var hashPassword = crypto.createHash('md5').update(req.body.contrasena).digest('hex');
     const user = new userModel({
@@ -92,6 +115,11 @@ route.get('/user/all', verifyToken, async (req, res) => {
         const users = await userModel.find(query)
             .skip(pageNumber > 0 ? (pageNumber * paginationSize) : 0)
             .limit(paginationSize).sort({ fechaCreacion: -1 });
+        const estudiantes = await estudianteModel.find()
+        for (i=0; i<users.length; i++){
+            if (users[i].rolId === userProfilesObject.est.id)
+                users[i].estudianteData = await estudianteModel.findOne({correo: users[i].correo})
+        }
 
         const totalUsers = await userModel.count(query);
         res.send({ users, totalUsers })
@@ -138,12 +166,60 @@ route.delete('/user/:id', verifyToken, async (req, res) => {
 route.patch('/user/:id', verifyToken, async (req, res) => {
 
     const usuarioValidar = await userModel.findOne({ correo: req.body.correo })
-    if (usuarioValidar) return res.status(400).json({
+    if (!usuarioValidar) return res.status(400).json({
         error: "Validación Datos",
-        descripcion: 'El Correo ya existe'
+        descripcion: 'El Correo no existe'
     });
+    if (req.body.rolId === userProfilesObject.est.id){
+        const estudiante = await estudianteModel.findOne({correo: req.body.correo})
+        if (estudiante){
+            estudiante.nombre= req.body.nombreUsuario;
+            estudiante.universidad= req.body.universidadEstudiante;
+            estudiante.programa= req.body.programa;
+            estudiante.fechaActualizacion= new Date();
+            try{
+                const updateEstudiante = await estudianteModel.updateOne({
+                    _id: estudiante._id
+                }, {
+                    $set: { ...estudiante }
+                })
+            }
+            catch (error){
+                return res.status(500).json({
+                    error:true,
+                    descripcion: error.message
+                })
+            }
+        }else{
+            const estudiante = new estudianteModel({
+                identificacion: req.body.identificacionEstudiante,
+                nombre: req.body.nombreUsuario,
+                universidad: req.body.universidadEstudiante,
+                programa: req.body.programa,
+                correo : req.body.correo,
+                fechaActualizacion: new Date(),
+                fechaCreacion: new Date(),
+                estado: true,
+            })
+            try{
+                const saveEstudiante = await estudiante.save();
+            }
+            catch (error){
+                return res.status(500).json({
+                    error:true,
+                    descripcion: error.message
+                })
+            }
+        }
+    }
+
     const userId = req.params.id;
-    var hashPassword = crypto.createHash('md5').update(req.body.contrasena).digest('hex');
+    if (req.body.contrasena){
+        var hashPassword = crypto.createHash('md5').update(req.body.contrasena).digest('hex');
+    }else{
+        var hashPassword = usuarioValidar.contrasena
+    }
+    
 
     const user = {
         nombreUsuario: req.body.nombreUsuario,

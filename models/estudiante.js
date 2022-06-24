@@ -1,5 +1,6 @@
 const mongoose=require('mongoose')
 const programa= require('../models/programa')
+const user= require('../models/user')
 
 const estudiante=mongoose.Schema({
     
@@ -20,6 +21,10 @@ const estudiante=mongoose.Schema({
             type:mongoose.Schema.ObjectId,
             ref:programa
         }
+    },
+    correo:{
+        type:String,
+        required:true
     },
     fechaCreacion:{
         type:Date,
