@@ -39,6 +39,7 @@ route.post('/user/add', verifyToken, async (req, res) => {
             nombre: req.body.nombreUsuario,
             universidad: req.body.universidadEstudiante,
             programa: req.body.programa,
+            plan: req.body.plan,
             correo : req.body.correo,
             fechaActualizacion: new Date(),
             fechaCreacion: new Date(),
@@ -178,6 +179,7 @@ route.patch('/user/:id', verifyToken, async (req, res) => {
             estudiante.nombre= req.body.nombreUsuario;
             estudiante.universidad= req.body.universidadEstudiante;
             estudiante.programa= req.body.programa;
+            estudiante.plan=req.body.plan;
             estudiante.fechaActualizacion= new Date();
             try{
                 const updateEstudiante = await estudianteModel.updateOne({
@@ -198,6 +200,7 @@ route.patch('/user/:id', verifyToken, async (req, res) => {
                 nombre: req.body.nombreUsuario,
                 universidad: req.body.universidadEstudiante,
                 programa: req.body.programa,
+                plan: req.body.plan,
                 correo : req.body.correo,
                 fechaActualizacion: new Date(),
                 fechaCreacion: new Date(),

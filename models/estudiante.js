@@ -1,5 +1,6 @@
 const mongoose=require('mongoose')
 const programa= require('../models/programa')
+const homologacion = require('../models/homologacion')
 const user= require('../models/user')
 
 const estudiante=mongoose.Schema({
@@ -17,11 +18,19 @@ const estudiante=mongoose.Schema({
         required:true
     },
     programa:{
+       type:String,
+       required:true
+    },
+    plan:{
+        type:String,
+        required:true
+    },
+    homologacion:[{
         _id:{
             type:mongoose.Schema.ObjectId,
-            ref:programa
+            ref:homologacion
         }
-    },
+    }],
     correo:{
         type:String,
         required:true

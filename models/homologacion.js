@@ -16,22 +16,6 @@ const homologacion = mongoose.Schema({
     type: mongoose.Schema.ObjectId,
     ref: asignatura
   },
-  identificacionSolicitante: {
-    type: String,
-    required: true
-  },
-  nombreSolicitante: {
-    type: String,
-    required: true
-  },
-  universidadSolicitante: {
-    type: String,
-    required: true
-  },
-  programaSolicitante: {
-    type: String,
-    required: true
-  },
   asignaturaSolicitante: {
     type: String,
     required: true
@@ -67,6 +51,5 @@ const homologacion = mongoose.Schema({
     type: Boolean,
     required: true
   }
-
 })
 module.exports = mongoose.model('Homologacion', homologacion)

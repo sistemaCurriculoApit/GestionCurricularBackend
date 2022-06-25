@@ -17,5 +17,22 @@ route.post('/getByEmail', verifyToken, async(req, res)=>{
     }
 })
 
+route.get('/all', verifyToken, async(req,res) => {
+    try{
+        const estudiantes = await estudianteModel.find();
+        res.status(200).json({
+          error: false,
+          descripcion: "Consulta Exitosa",
+          estudiantes
+        })
+    }catch (error) {
+    console.error(error);
+    res.status(500).json({
+      error: true,
+      descripcion: error.message
+    })
+  }
+})
+
 
 module.exports = route
