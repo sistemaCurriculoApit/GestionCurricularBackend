@@ -115,12 +115,6 @@ route.get('/user/all', verifyToken, async (req, res) => {
         const users = await userModel.find(query)
             .skip(pageNumber > 0 ? (pageNumber * paginationSize) : 0)
             .limit(paginationSize).sort({ fechaCreacion: -1 });
-        const estudiantes = await estudianteModel.find()
-        for (i=0; i<users.length; i++){
-            if (users[i].rolId === userProfilesObject.est.id)
-                users[i].estudianteData = await estudianteModel.findOne({correo: users[i].correo})
-        }
-
         const totalUsers = await userModel.count(query);
         res.send({ users, totalUsers })
     } catch (error) {
@@ -170,8 +164,16 @@ route.patch('/user/:id', verifyToken, async (req, res) => {
         error: "Validación Datos",
         descripcion: 'El Correo no existe'
     });
-    if (req.body.rolId === userProfilesObject.est.id){
-        const estudiante = await estudianteModel.findOne({correo: req.body.correo})
+    const estudiante = await estudianteModel.findOne({correo: req.body.correo})
+
+    if (req.body.rolId !== userProfilesObject.est.id && estudiante){
+        estudiante.estado = false
+        await estudianteModel.updateOne({
+            _id: estudiante._id
+        }, {
+            $set: { ...estudiante }
+        })
+    }else if (req.body.rolId === userProfilesObject.est.id){
         if (estudiante){
             estudiante.nombre= req.body.nombreUsuario;
             estudiante.universidad= req.body.universidadEstudiante;

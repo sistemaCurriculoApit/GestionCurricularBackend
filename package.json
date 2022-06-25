@@ -14,7 +14,7 @@
     "html-pdf-node": "^1.0.8",
     "jsonwebtoken": "^8.5.1",
     "mongoose": "^6.0.13",
-    "nodemon": "^2.0.15"
+    "nodemon": "^2.0.18"
   },
   "scripts": {
     "start": "nodemon app.js"
