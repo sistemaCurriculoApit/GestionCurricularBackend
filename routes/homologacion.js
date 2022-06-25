@@ -3,6 +3,7 @@ const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
 const ObjectId = Schema.Types.ObjectId;
 const homologacionModel = require('../models/homologacion')
+const estudianteModel = require('../models/estudiante')
 const jwt = require('jsonwebtoken')
 const verify = require('./validarToken')
 const verifyToken = require('./validarToken')
@@ -13,6 +14,15 @@ const { paginationSize } = require('../constants/constants')
 
 route.post('/add', verifyToken, async (req, res) => {
   try {
+
+    const estudiante = await estudianteModel.findById(req.body.estudianteId)
+
+    if (!estudiante || !estudiante.estado){
+      return res.status(400).json({
+        error: "Validación Datos",
+        descripcion: 'Estudiante inexxistente o inactivo.'
+    });
+    }
 
     let estado = req.body.estadoHomologacion ? parseInt(req.body.estadoHomologacion):0;
 
@@ -36,6 +46,12 @@ route.post('/add', verifyToken, async (req, res) => {
     })
 
     const save = await homologacion.save();
+    estudiante.homologacion = save;
+    const updateEstudiante = await estudianteModel.updateOne({
+      _id: estudiante._id
+      }, {
+      $set: { ...estudiante }
+      })
     res.send(save);
   } catch (err) {
     res.status(400).json({
@@ -43,7 +59,6 @@ route.post('/add', verifyToken, async (req, res) => {
       descripcion: err.message
     });
   }
-
 })
 
 route.get('/all', verifyToken, async (req, res) => {
