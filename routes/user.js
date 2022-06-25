@@ -33,7 +33,9 @@ route.post('/user/add', verifyToken, async (req, res) => {
         descripcion: 'El Correo ya existe'
     });
 
-    if (req.body.rolId === userProfilesObject.est.id){
+    const estudiante = await estudianteModel.findOne({correo: req.body.correo})
+
+    if (req.body.rolId === userProfilesObject.est.id && !estudiante){
         const estudiante = new estudianteModel({
             identificacion: req.body.identificacionEstudiante,
             nombre: req.body.nombreUsuario,
@@ -54,6 +56,25 @@ route.post('/user/add', verifyToken, async (req, res) => {
                 descripcion: error.message
             })
         }
+    }else if (req.body.rolId === userProfilesObject.est.id){
+            estudiante.nombre= req.body.nombreUsuario;
+            estudiante.universidad= req.body.universidadEstudiante;
+            estudiante.programa= req.body.programa;
+            estudiante.plan=req.body.plan;
+            estudiante.fechaActualizacion= new Date();
+            try{
+                const updateEstudiante = await estudianteModel.updateOne({
+                    _id: estudiante._id
+                }, {
+                    $set: { ...estudiante }
+                })
+            }
+            catch (error){
+                return res.status(500).json({
+                    error:true,
+                    descripcion: error.message
+                })
+            }
     }
 
     var hashPassword = crypto.createHash('md5').update(req.body.contrasena).digest('hex');
