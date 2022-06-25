@@ -46,7 +46,7 @@ route.post('/add', verifyToken, async (req, res) => {
     })
 
     const save = await homologacion.save();
-    estudiante.homologacion = save;
+    estudiante.homologacion.push(save);
     const updateEstudiante = await estudianteModel.updateOne({
       _id: estudiante._id
       }, {
@@ -87,11 +87,10 @@ route.get('/all', verifyToken, async (req, res) => {
       var regex = new RegExp(search, 'ig');
       const or = {
         $or: [
-          { 'identificacionSolicitante': regex },
-          { 'nombreSolicitante': regex },
-          { 'universidadSolicitante': regex },
-          { 'programaSolicitante': regex },
-          { 'asignaturaSolicitante': regex },
+          { 'identificacion': regex },
+          { 'nombre': regex },
+          { 'universidad': regex },
+          { 'programa': regex }
         ]
       }
       query = {
@@ -99,10 +98,10 @@ route.get('/all', verifyToken, async (req, res) => {
       };
     }
 
-
-    const homologaciones = await homologacionModel.find(query)
+    const homologaciones = await homologacionModel.find()
       .skip(pageNumber > 0 ? (pageNumber * paginationSize) : 0)
       .limit(paginationSize).sort({ fechaCreacion: -1 });
+      console.log(homologaciones)
 
     const totalHomologaciones = await homologacionModel.count(query);
     res.send({ homologaciones, totalHomologaciones })
@@ -237,6 +236,16 @@ route.delete('/:id', verifyToken, async (req, res) => {
 
 route.patch('/:id', verifyToken, async (req, res) => {
   try {
+
+    const estudiante = await estudianteModel.findById(req.body.estudianteId)
+
+    if (!estudiante || !estudiante.estado){
+      return res.status(400).json({
+        error: "Validación Datos",
+        descripcion: 'Estudiante inexxistente o inactivo.'
+    });
+    }
+
     const id = req.params.id;
     let estado = req.body.estadoHomologacion ? parseInt(req.body.estadoHomologacion):0;
     const homologacion = {
@@ -260,6 +269,12 @@ route.patch('/:id', verifyToken, async (req, res) => {
     }, {
       $set: homologacion
     });
+    estudiante.homologacion.push(req.params.id);
+    const updateEstudiante = await estudianteModel.updateOne({
+      _id: estudiante._id
+      }, {
+      $set: { ...estudiante }
+      })
     res.status(200).json({
       error: false,
       descripcion: "Registro Actualizado Exitosamente",
