@@ -8,7 +8,7 @@ const jwt = require('jsonwebtoken')
 const verify = require('./validarToken')
 const verifyToken = require('./validarToken')
 const route = express.Router()
-const { paginationSize } = require('../constants/constants')
+const { paginationSize, userProfilesObject } = require('../constants/constants')
 
 
 
@@ -98,10 +98,10 @@ route.get('/all', verifyToken, async (req, res) => {
       };
     }
 
-    const homologaciones = await homologacionModel.find()
+    const homologaciones = await homologacionModel.find(query)
       .skip(pageNumber > 0 ? (pageNumber * paginationSize) : 0)
       .limit(paginationSize).sort({ fechaCreacion: -1 });
-      console.log(homologaciones)
+
 
     const totalHomologaciones = await homologacionModel.count(query);
     res.send({ homologaciones, totalHomologaciones })
@@ -269,6 +269,7 @@ route.patch('/:id', verifyToken, async (req, res) => {
     }, {
       $set: homologacion
     });
+
     estudiante.homologacion.push(req.params.id);
     const updateEstudiante = await estudianteModel.updateOne({
       _id: estudiante._id
