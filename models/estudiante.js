@@ -15,16 +15,25 @@ const estudiante=mongoose.Schema({
     },
     universidad:{
         type:String,
+    },
+    universidadOrigen:{
+        type:String,
         required:true
     },
     programa:{
        type:String,
-       required:true
     },
     plan:{
         type:String,
-        required:true
     },
+    programaOrigen:{
+        type:String,
+        required:true
+     },
+     planOrigen:{
+         type:String,
+         required:true
+     },
     homologacion:[{
         _id:{
             type:mongoose.Schema.ObjectId,

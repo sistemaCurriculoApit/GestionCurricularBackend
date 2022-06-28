@@ -40,8 +40,11 @@ route.post('/user/add', verifyToken, async (req, res) => {
             identificacion: req.body.identificacionEstudiante,
             nombre: req.body.nombreUsuario,
             universidad: req.body.universidadEstudiante,
+            universidadOrigen: req.body.universidadEstudianteOrigen,
             programa: req.body.programa,
             plan: req.body.plan,
+            programaOrigen: req.body.programaOrigen,
+            planOrigen: req.body.planOrigen,
             correo : req.body.correo,
             fechaActualizacion: new Date(),
             fechaCreacion: new Date(),
@@ -59,8 +62,11 @@ route.post('/user/add', verifyToken, async (req, res) => {
     }else if (req.body.rolId === userProfilesObject.est.id){
             estudiante.nombre= req.body.nombreUsuario;
             estudiante.universidad= req.body.universidadEstudiante;
+            estudiante.universidadOrigen = req.body.universidadEstudianteOrigen;
             estudiante.programa= req.body.programa;
             estudiante.plan=req.body.plan;
+            estudiante.programaOrigen= req.body.programaOrigen;
+            estudiante.planOrigen=req.body.planOrigen;
             estudiante.fechaActualizacion= new Date();
             estudiante.estado = true;
             try{
@@ -200,8 +206,11 @@ route.patch('/user/:id', verifyToken, async (req, res) => {
         if (estudiante){
             estudiante.nombre= req.body.nombreUsuario;
             estudiante.universidad= req.body.universidadEstudiante;
+            estudiante.universidadOrigen = req.body.universidadEstudianteOrigen
             estudiante.programa= req.body.programa;
             estudiante.plan=req.body.plan;
+            estudiante.programaOrigen= req.body.programaOrigen;
+            estudiante.planOrigen=req.body.planOrigen;
             estudiante.estado = true;
             estudiante.fechaActualizacion= new Date();
             try{
@@ -222,8 +231,11 @@ route.patch('/user/:id', verifyToken, async (req, res) => {
                 identificacion: req.body.identificacionEstudiante,
                 nombre: req.body.nombreUsuario,
                 universidad: req.body.universidadEstudiante,
+                universidadOrigen: req.body.universidadEstudianteOrigen,
                 programa: req.body.programa,
                 plan: req.body.plan,
+                programaOrigen: req.body.programaOrigen,
+                planOrigen: req.body.planOrigen,
                 correo : req.body.correo,
                 fechaActualizacion: new Date(),
                 fechaCreacion: new Date(),
