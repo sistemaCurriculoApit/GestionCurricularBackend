@@ -577,7 +577,8 @@ route.post('/getFile', async (req, res) => {
     var pdf = require('html-pdf');
 
     //Se obtienen datos necesarios que no llegan en el request para llenado de platilla
-    const area = await areaModel.findOne({ 'asignatura._id' : req.body._id });
+try{
+        const area = await areaModel.findOne({ 'asignatura._id' : req.body._id });
     let plan;
     let programa;
     if (area)
@@ -666,6 +667,13 @@ route.post('/getFile', async (req, res) => {
             pdfStream.pipe(res)
         }
      });
+    }catch (error){
+        console.error(error);
+        res.status(500).json({
+            error: true,
+            descripcion: error.message
+        })
+    }
 })
 
 module.exports = route
