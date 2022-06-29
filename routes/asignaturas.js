@@ -578,7 +578,7 @@ route.post('/getFile', async (req, res) => {
 
     //Se obtienen datos necesarios que no llegan en el request para llenado de platilla
 try{
-        const area = await areaModel.findOne({ 'asignatura._id' : req.body._id });
+    const area = await areaModel.findOne({ 'asignatura._id' : req.body._id });
     let plan;
     let programa;
     if (area)
@@ -604,10 +604,8 @@ try{
     //area data
     if(area){
         fileString = fileString.replace('[area]', area.nombre ?? '')
-        fileString = fileString.replace('[codigo]', area.codigo ?? '')
     }else{
         fileString = fileString.replace('[area]', '')
-        fileString = fileString.replace('[codigo]',  '')
     }
 
     
@@ -615,6 +613,7 @@ try{
     fileString = fileString.replace('[asignatura]', req.body.nombre ?? '')
     fileString = fileString.replace('[prerrequisitos]', req.body.prerrequisitos ?? '')
     fileString = fileString.replace('[correquisitos]', req.body.correquisitos ?? '')
+    fileString = fileString.replace('[codigo]', req.body.codigo ?? '')
 
     //Se ejecuta dos veces dado que la plantilla los campos horas_teorica y horas_practica estan dos veces
     for (let i = 0; i < 2; i++) {
@@ -638,7 +637,7 @@ try{
 
     //Contenido data. Se ejecuta 6 veces dada la cantidad de contenidos de la plantilla. Max 6
     for (let i=0; i < 6; i++){
-        if (req.body.contenido[i]){
+        if (req.body.contenido && req.body.contenido[i]){
             fileString = fileString.replace(`[tema_${i+1}]`, req.body.contenido[i].nombre ?? '' )
             fileString = fileString.replace(`[subtemas_${i+1}]`, req.body.contenido[i].descripcion ?? '')
         }else{
