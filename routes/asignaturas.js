@@ -195,6 +195,71 @@ route.get('/allNotPaginatedWithPlanCode', verifyToken, async (req, res) => {
     }
 })
 
+route.get('/allNotPaginatedWithPlanCodeNoToken', async (req, res) => {
+    try {
+        let query = {}
+
+        //Datos para los filtros
+        let search = req.query.search;
+
+        if (search) {
+            var regex = new RegExp(search, 'ig');
+            const or = {
+                $or: [
+                    { 'codigo': regex },
+                    { 'nombre': regex },
+                    { 'descripcion': regex },
+                ]
+            }
+            query = {
+                $and: [query, or],
+            };
+        }
+
+        const asignaturas = await asignaturaModel.find(query);
+        var newAsignaturas = [];
+        if (asignaturas.length) {
+            for (let i = 0; i < asignaturas.length; i++) {
+                const area = await areaModel.find({ 'asignatura._id' : asignaturas[i]._id });
+                if (area && area[0]){
+                    var plan;
+                    if (area[1]){
+                        plan = await planModel.find({'area._id' : area[1]._id})
+                    }else {
+                        plan = await planModel.find({'area._id' : area[0]._id})
+                    }
+                    if(plan){
+                        var asignaturaObj;
+                        if (plan[1]){
+                            asignaturaObj = {
+                                asignatura: asignaturas[i],
+                                codigoPlan: plan[1].codigo
+                            }
+                        }else{
+                            asignaturaObj = {
+                                asignatura: asignaturas[i],
+                                codigoPlan: plan[0].codigo
+                            }
+                        }
+                        newAsignaturas.push(asignaturaObj)
+                    }
+                }
+            }
+        }
+        res.status(200).json({
+            error: false,
+            descripcion: "Consulta Exitosa",
+            asignaturas: newAsignaturas
+        })
+    }catch (error) {
+        console.error(error);
+        res.status(500).json({
+            error: true,
+            descripcion: error.message
+        })
+    }
+})
+
 route.get('/allNotPaginated', verifyToken, async (req, res) => {
     try {
         let query = {}
