@@ -4,6 +4,7 @@ const asignaturaModel = require('../models/asignatura')
 const areaModel = require('../models/area')
 const planModel = require('../models/plan')
 const programaModel = require('../models/programa')
+const docenteModel = require('../models/docente')
 const route = express.Router()
 const jwt = require('jsonwebtoken')
 const verifyToken = require('./validarToken')
@@ -591,7 +592,7 @@ route.post('/getEquivalenciaByAsignatura', verifyToken, async (req, res) => {
                     }
                 }
             }
-            
+
         }
 
         res.status(200).json({
@@ -657,15 +658,15 @@ try{
 
     //Se obtiene la plantilla del modulo templateHtml
     let fileString = TemplateHtml.module.toString();
-    
+
     //Llenado de data en la plantilla html con datos de la asignatura.
     //programa data
     if (programa){
         fileString = fileString.replace('[programa]', programa.nombre ?? '')
     }else{
-        fileString = fileString.replace('[programa]', '')   
+        fileString = fileString.replace('[programa]', '')
     }
-    
+
     //area data
     if(area){
         fileString = fileString.replace('[area]', area.nombre ?? '')
@@ -673,7 +674,7 @@ try{
         fileString = fileString.replace('[area]', '')
     }
 
-    
+
     //asignatura data
     fileString = fileString.replace('[asignatura]', req.body.nombre ?? '')
     fileString = fileString.replace('[prerrequisitos]', req.body.prerrequisitos ?? '')
@@ -712,7 +713,7 @@ try{
     }
 
     //Config pdf
-    var config = {format: 'A4', 
+    var config = {format: 'A4',
         border: {
             top: "0.2in",
             right: "0.4in",
@@ -732,6 +733,49 @@ try{
         }
      });
     }catch (error){
+        console.error(error);
+        res.status(500).json({
+            error: true,
+            descripcion: error.message
+        })
+    }
+})
+
+
+route.post('/getAllAsignaturasByDocente', verifyToken, async (req, res) => {
+    try {
+
+        const asignaturas = await asignaturaModel.find();
+        let asignaturasByDocente = [];
+        if (asignaturas.length) {
+            for (let i = 0; i < asignaturas.length; i++) {
+                var docenteIds = asignaturas[i].docente.map(x => x._id.toString())
+                if (docenteIds.length > 0){
+                    for (let j = 0; j < docenteIds.length; j++){
+                        if (docenteIds[j] === req.body.docenteId){
+                            asignaturasByDocente.push(asignaturas[i])  
+                        }
+                    }
+                }
+            }
+        }
+        if (!asignaturasByDocente.length) {
+            res.status(200).json({
+                error: false,
+                descripcion: "Consulta Exitosa",
+                asignaturas: []
+            })
+            return
+        } else {
+
+            res.status(200).json({
+                error: false,
+                descripcion: "Consulta Exitosa",
+                asignaturas: asignaturasByDocente
+            })
+
+        }
+    } catch (error) {
         console.error(error);
         res.status(500).json({
             error: true,
