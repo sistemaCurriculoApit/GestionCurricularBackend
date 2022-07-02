@@ -37,7 +37,7 @@ route.post('/user/add', verifyToken, async (req, res) => {
 
     if (req.body.rolId === userProfilesObject.est.id && !estudiante){
         const estudiante = new estudianteModel({
-            identificacion: req.body.identificacionEstudiante,
+            identificacion: req.body.identificacion,
             nombre: req.body.nombreUsuario,
             universidad: req.body.universidadEstudiante,
             universidadOrigen: req.body.universidadEstudianteOrigen,
@@ -87,6 +87,7 @@ route.post('/user/add', verifyToken, async (req, res) => {
     var hashPassword = crypto.createHash('md5').update(req.body.contrasena).digest('hex');
     const user = new userModel({
         nombreUsuario: req.body.nombreUsuario,
+        identificacion: req.body.identificacion,
         correo: req.body.correo,
         contrasena: hashPassword,
         rolId: req.body.rolId,
@@ -206,6 +207,7 @@ route.patch('/user/:id', verifyToken, async (req, res) => {
         if (estudiante){
             estudiante.nombre= req.body.nombreUsuario;
             estudiante.universidad= req.body.universidadEstudiante;
+            estudiante.identificacion = req.body.identificacion;
             estudiante.universidadOrigen = req.body.universidadEstudianteOrigen
             estudiante.programa= req.body.programa;
             estudiante.plan=req.body.plan;
@@ -228,7 +230,7 @@ route.patch('/user/:id', verifyToken, async (req, res) => {
             }
         }else{
             const estudiante = new estudianteModel({
-                identificacion: req.body.identificacionEstudiante,
+                identificacion: req.body.identificacion,
                 nombre: req.body.nombreUsuario,
                 universidad: req.body.universidadEstudiante,
                 universidadOrigen: req.body.universidadEstudianteOrigen,
@@ -263,6 +265,7 @@ route.patch('/user/:id', verifyToken, async (req, res) => {
 
     const user = {
         nombreUsuario: req.body.nombreUsuario,
+        identificacion: req.body.identificacion,
         correo: req.body.correo,
         contrasena: hashPassword,
         rolId: req.body.rolId,
