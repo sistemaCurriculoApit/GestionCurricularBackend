@@ -3,6 +3,7 @@ const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
 const ObjectId = Schema.Types.ObjectId;
 const avanceModel = require('../models/avance')
+const docenteModel = require('../models/docente')
 const jwt = require('jsonwebtoken')
 const verify = require('./validarToken')
 const verifyToken = require('./validarToken')
@@ -71,6 +72,67 @@ route.get('/all', verifyToken, async (req, res) => {
       }
       query = {
         $and: [query, or],
+      };
+    }
+
+
+    const avances = await avanceModel.find(query)
+      .skip(pageNumber > 0 ? (pageNumber * paginationSize) : 0)
+      .limit(paginationSize).sort({ fechaCreacion: -1 });
+
+    const totalAvances = await avanceModel.count(query);
+    res.send({ avances, totalAvances })
+  } catch (error) {
+    res.status(400).json({
+      error: true,
+      descripcion: error.message
+    })
+  }
+})
+
+
+route.get('/allByDocenteEmail', verifyToken, async (req, res) => {
+
+  try {
+    let pageNumber = req.query.page ? req.query.page * 1 : 0;
+    let query = {}
+
+    //Datos para los filtros
+    let search = req.query.search;
+    let dateCreationFrom = req.query.dateCreationFrom;
+    let dateCreationTo = req.query.dateCreationTo;
+
+    let docente = await docenteModel.findOne({correo: req.query.emailDocente})
+
+    if (!docente) return res.status(400).json({
+      error: "Validación Datos",
+      descripcion: 'El docente no existe'
+    });
+
+    if (dateCreationFrom || dateCreationTo) {
+      query.fechaCreacion = {}
+      if (dateCreationFrom) {
+        query.fechaCreacion.$gte = new Date(new Date(dateCreationFrom).toDateString()).toISOString();
+      }
+      if (dateCreationTo) {
+        query.fechaCreacion.$lte = new Date(new Date(dateCreationTo).toDateString()).toISOString();
+      }
+    }
+
+    if (search) {
+      var regex = new RegExp(search, 'ig');
+      const or = {
+        $or: [
+          { 'descripcion': regex },
+        ]
+      }
+      query = {
+        $and: [query, or],
+        $and: [{'docenteId' : docente._id}]
+      };
+    }else {
+      query = {
+        $and: [{'docenteId' : docente._id}]
       };
     }
 
