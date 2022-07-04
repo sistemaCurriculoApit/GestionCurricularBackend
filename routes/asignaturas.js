@@ -520,6 +520,7 @@ route.patch('/:id', verifyToken, async (req, res) => {
         let hPractica = req.body.intensidadHorariaPractica ? parseInt(req.body.intensidadHorariaPractica):0;
         let hTeorica = req.body.intensidadHorariaTeorica ? parseInt(req.body.intensidadHorariaTeorica) : 0;
         let hIndependiente = req.body.intensidadHorariaIndependiente ? parseInt(req.body.intensidadHorariaIndependiente) : 0;
+        req.body.fechaActualizacion = new Date();
         if (req.body.asignaturaTipo === 0){
             hPractica = 0;
         }else if (req.body.asignaturaTipo === 1){
