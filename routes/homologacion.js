@@ -20,7 +20,7 @@ route.post('/add', verifyToken, async (req, res) => {
     if (!estudiante || !estudiante.estado){
       return res.status(400).json({
         error: "Validación Datos",
-        descripcion: 'Estudiante inexxistente o inactivo.'
+        descripcion: 'Estudiante inexistente o inactivo.'
     });
     }
 
@@ -38,7 +38,7 @@ route.post('/add', verifyToken, async (req, res) => {
       añoHomologacion: req.body.añoHomologacion,
       periodo: req.body.periodo,
       estadoHomologacion: estado,
-      fechaDecision: estado === 2 ? req.body.fechaDecision : null,
+      fechaDecision: estado !== 2 ? req.body.fechaDecision : null,
       descripcion: req.body.descripcion,
       fechaActualizacion: new Date(),
       fechaCreacion: new Date(),
