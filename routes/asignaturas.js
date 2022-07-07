@@ -164,7 +164,7 @@ route.get('/allNotPaginatedWithPlanCode', verifyToken, async (req, res) => {
                     }else {
                         plan = await planModel.find({'area._id' : area[0]._id})
                     }
-                    if(plan){
+                    if(plan && plan.length > 0){
                         var asignaturaObj;
                         if (plan[1]){
                             asignaturaObj = {
