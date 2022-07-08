@@ -7,6 +7,10 @@ const user=mongoose.Schema({
         type:String,
         required:true
     },
+    identificacion:{
+        type:String,
+        required:true
+    },
     correo:{
         type:String,
         required:true

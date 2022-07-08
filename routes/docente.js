@@ -130,6 +130,40 @@ route.get('/allNotPaginated', verifyToken, async (req, res) => {
     }
 })
 
+route.get('/allNotPaginatedNT', async (req, res) => {
+    let query = {}
+    //Datos para los filtros
+    let search = req.query.search;
+
+    if (search) {
+        var regex = new RegExp(search, 'ig');
+        const or = {
+            $or: [
+                { 'nombre': regex },
+                { 'correo': regex },
+                { 'documento': regex },
+            ]
+        }
+        query = {
+            $and: [query, or],
+        };
+    }
+
+    const docentes = await docenteModel.find(query);
+    try {
+        res.status(200).json({
+            error: false,
+            docentes
+        });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({
+            error: true,
+            descripcion: error.message
+        })
+    }
+})
+
 route.post('/byListIds', verifyToken, async (req, res) => {
     try {
         let query = {}

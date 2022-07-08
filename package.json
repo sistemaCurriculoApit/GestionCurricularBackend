@@ -10,9 +10,11 @@
     "cors": "^2.8.5",
     "dotenv": "^10.0.0",
     "express": "^4.17.1",
+    "html-pdf": "^3.0.1",
+    "html-pdf-node": "^1.0.8",
     "jsonwebtoken": "^8.5.1",
     "mongoose": "^6.0.13",
-    "nodemon": "^2.0.15"
+    "nodemon": "^2.0.18"
   },
   "scripts": {
     "start": "nodemon app.js"
