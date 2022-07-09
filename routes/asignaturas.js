@@ -713,6 +713,11 @@ try{
         }
     }
 
+    //Make break lines on file
+    const search = '\n';
+    const replaceWith = '<br>';
+    fileString = fileString.split(search).join(replaceWith);
+
     //Config pdf
     var config = {format: 'A4',
         border: {
