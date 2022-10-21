@@ -1,12 +1,9 @@
-const express = require('express')
 const contenidoModel = require('../models/contenido')
-const route = express.Router()
-const jwt = require('jsonwebtoken')
-const verify = require('./validarToken')
-const verifyToken = require('./validarToken')
+const router = require('express').Router()
+const verifyToken = require('../util/tokenValidation')
 const { paginationSize } = require('../constants/constants')
 
-route.post('/add', verifyToken, async (req, res) => {
+router.post('/add', verifyToken, async (req, res) => {
 
     try {
 
@@ -44,7 +41,8 @@ route.post('/add', verifyToken, async (req, res) => {
     }
 
 })
-route.get('/all', verifyToken, async (req, res) => {
+
+router.get('/all', verifyToken, async (req, res) => {
     try {
         let pageNumber = req.query.page ? req.query.page * 1 : 0;
         let query = {}
@@ -97,7 +95,7 @@ route.get('/all', verifyToken, async (req, res) => {
     }
 })
 
-route.get('/allNotPaginated', verifyToken, async (req, res) => {
+router.get('/allNotPaginated', verifyToken, async (req, res) => {
     try {
         let query = {}
 
@@ -133,34 +131,7 @@ route.get('/allNotPaginated', verifyToken, async (req, res) => {
     }
 })
 
-route.post('/getAllContenidoByAsignatura', verifyToken, async (req, res) => {
-    try {
-        let query = {}
-
-        //Datos para los filtros
-        let search = req.body.search;
-
-        if (req.body.contenidosIds) {
-            query = { _id: { $in: req.body.contenidosIds } }
-        }
-
-        const contenidos = await contenidoModel.find(query);
-
-        res.status(200).json({
-            error: false,
-            descripcion: "Consulta Exitosa",
-            contenidos: contenidos
-        })
-
-    } catch (error) {
-        console.error(error);
-        res.status(500).json({
-            error: true,
-            descripcion: error.message
-        })
-    }
-})
-route.post('/getAllContenidoByAsignaturaNT', async (req, res) => {
+router.post('/getAllContenidoByAsignatura', verifyToken, async (req, res) => {
     try {
         let query = {}
 
@@ -188,7 +159,35 @@ route.post('/getAllContenidoByAsignaturaNT', async (req, res) => {
     }
 })
 
-route.get('/:id', verifyToken, async (req, res) => {
+router.post('/getAllContenidoByAsignaturaNT', async (req, res) => {
+    try {
+        let query = {}
+
+        //Datos para los filtros
+        let search = req.body.search;
+
+        if (req.body.contenidosIds) {
+            query = { _id: { $in: req.body.contenidosIds } }
+        }
+
+        const contenidos = await contenidoModel.find(query);
+
+        res.status(200).json({
+            error: false,
+            descripcion: "Consulta Exitosa",
+            contenidos: contenidos
+        })
+
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({
+            error: true,
+            descripcion: error.message
+        })
+    }
+})
+
+router.get('/:id', verifyToken, async (req, res) => {
     try {
         const id = req.params.id;
         const contenido = await contenidoModel.findById(id);
@@ -219,7 +218,7 @@ route.get('/:id', verifyToken, async (req, res) => {
     }
 })
 
-route.delete('/:id', verifyToken, async (req, res) => {
+router.delete('/:id', verifyToken, async (req, res) => {
     try {
         const contenidoId = req.params.id;
         const contenido = contenidoModel.remove({
@@ -232,7 +231,7 @@ route.delete('/:id', verifyToken, async (req, res) => {
 
 })
 
-route.post('/eliminar/:id', verifyToken, async (req, res) => {
+router.post('/eliminar/:id', verifyToken, async (req, res) => {
     const id = req.params.id;
 
     try {
@@ -254,7 +253,7 @@ route.post('/eliminar/:id', verifyToken, async (req, res) => {
 
 })
 
-route.patch('/:id', verifyToken, async (req, res) => {
+router.patch('/:id', verifyToken, async (req, res) => {
     try {
         const contenidoValidar = await contenidoModel.findOne({ codigo: req.body.codigo });
         if (contenidoValidar && contenidoValidar._id.toString() !== req.params.id) return res.status(400).json({
@@ -294,4 +293,4 @@ route.patch('/:id', verifyToken, async (req, res) => {
 })
 
 
-module.exports = route
+module.exports = router

@@ -1,11 +1,10 @@
-const express = require('express')
+const router = require('express').Router()
 const equivalenciaModel = require('../models/equivalencia')
-const route = express.Router()
-const verifyToken = require('./validarToken')
+const verifyToken = require('../util/tokenValidation')
 const { paginationSize } = require('../constants/constants')
 
-route.post('/add', verifyToken, async(req, res) => {
-    try{
+router.post('/add', verifyToken, async (req, res) => {
+    try {
         const equivalenciaValidar = await equivalenciaModel.findOne({ sourceCourseCode: req.body.sourceCourseCode })
         if (equivalenciaValidar) return res.status(400).json({
             error: "Validacion Datos",
@@ -26,7 +25,7 @@ route.post('/add', verifyToken, async(req, res) => {
             equivalencia: equivalenciaSaved
         })
 
-    } catch (error){
+    } catch (error) {
         res.status(500).json({
             error: true,
             description: error.message
@@ -34,7 +33,7 @@ route.post('/add', verifyToken, async(req, res) => {
     }
 })
 
-route.patch('/:id', verifyToken, async (req, res) => {
+router.patch('/:id', verifyToken, async (req, res) => {
     try {
         const id = req.params.id;
 
@@ -66,7 +65,7 @@ route.patch('/:id', verifyToken, async (req, res) => {
 
 })
 
-route.delete('/:id', verifyToken, async (req, res) => {
+router.delete('/:id', verifyToken, async (req, res) => {
     const id = req.params.id;
 
     try {
@@ -90,8 +89,7 @@ route.delete('/:id', verifyToken, async (req, res) => {
 
 })
 
-
-route.get('/all', verifyToken, async (req, res) => {
+router.get('/all', verifyToken, async (req, res) => {
     try {
         let pageNumber = req.query.page ? req.query.page * 1 : 0;
         let query = {}
@@ -130,7 +128,7 @@ route.get('/all', verifyToken, async (req, res) => {
     }
 })
 
-route.get('/allNotPaginated', verifyToken, async (req, res) => {
+router.get('/allNotPaginated', verifyToken, async (req, res) => {
     try {
         let query = {}
 
@@ -166,7 +164,7 @@ route.get('/allNotPaginated', verifyToken, async (req, res) => {
     }
 })
 
-route.get('/:id', verifyToken, async (req, res) => {
+router.get('/:id', verifyToken, async (req, res) => {
     try {
         const id = req.params.id;
         const equivalencia = await equivalenciaModel.findById(id);
@@ -195,8 +193,7 @@ route.get('/:id', verifyToken, async (req, res) => {
     }
 })
 
-
-route.post('/getEquivalenciaByAsignatura', verifyToken, async (req, res) => {
+router.post('/getEquivalenciaByAsignatura', verifyToken, async (req, res) => {
     try {
         let query = {}
 
@@ -223,5 +220,4 @@ route.post('/getEquivalenciaByAsignatura', verifyToken, async (req, res) => {
     }
 })
 
-
-module.exports = route
+module.exports = router

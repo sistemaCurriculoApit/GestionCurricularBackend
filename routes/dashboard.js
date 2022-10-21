@@ -1,15 +1,12 @@
-const express = require('express')
 const actaModel = require('../models/acta')
 const userModel = require('../models/user')
 const docenteModel = require('../models/docente')
 const homologacion = require('../models/homologacion')
 const avance = require('../models/avance')
-const route = express.Router()
-const verifyToken = require('./validarToken')
+const router = require('express').Router()
+const verifyToken = require('../util/tokenValidation')
 
-
-
-route.get('/dataCount', verifyToken, async (req, res) => {
+router.get('/dataCount', verifyToken, async (req, res) => {
     try {
 
         const totalUsers = await userModel.count({});
@@ -23,7 +20,7 @@ route.get('/dataCount', verifyToken, async (req, res) => {
     }
 })
 
-route.get('/chartHomologaciones', verifyToken, async (req, res) => {
+router.get('/chartHomologaciones', verifyToken, async (req, res) => {
     try {
         let query = {}
         let homologacionesByMonth = []
@@ -45,7 +42,7 @@ route.get('/chartHomologaciones', verifyToken, async (req, res) => {
     }
 })
 
-route.get('/chartAvances', verifyToken, async (req, res) => {
+router.get('/chartAvances', verifyToken, async (req, res) => {
     try {
         let query = {}
         let avancesByMonth = []
@@ -67,4 +64,4 @@ route.get('/chartAvances', verifyToken, async (req, res) => {
     }
 })
 
-module.exports = route
+module.exports = router

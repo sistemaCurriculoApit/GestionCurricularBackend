@@ -1,20 +1,15 @@
-const express = require('express')
+const router = require('express').Router()
 const docenteModel = require('../models/docente')
-const route = express.Router()
-const joi = require('@hapi/joi')
-const bcrypt = require('bcrypt')
-const jwt = require('jsonwebtoken')
-const verify = require('./validarToken')
-const verifyToken = require('./validarToken')
+const verifyToken = require('../util/tokenValidation')
 const { paginationSize } = require('../constants/constants')
 
-route.post('/add', verifyToken, async (req, res) => {
+router.post('/add', verifyToken, async (req, res) => {
 
     const docenteValidar = await docenteModel.findOne({ correo: req.body.correo })
     if (docenteValidar) return res.status(400).json({
         error: "Validación Datos",
         descripcion: 'El Correo ya existe'
-    }); 
+    });
 
     const docente = new docenteModel({
         nombre: req.body.nombre,
@@ -43,7 +38,7 @@ route.post('/add', verifyToken, async (req, res) => {
 
 })
 
-route.get('/all', verifyToken, async (req, res) => {
+router.get('/all', verifyToken, async (req, res) => {
     let pageNumber = req.query.page ? req.query.page * 1 : 0;
     let query = {}
 
@@ -76,17 +71,18 @@ route.get('/all', verifyToken, async (req, res) => {
         };
     }
 
-    
+
     try {
         const docentes = await docenteModel.find(query)
-        .skip(pageNumber > 0 ? (pageNumber * paginationSize) : 0)
-        .limit(paginationSize).sort({ fechaCreacion: -1 });
+            .skip(pageNumber > 0 ? (pageNumber * paginationSize) : 0)
+            .limit(paginationSize).sort({ fechaCreacion: -1 });
 
-    const totalDocentes = await docenteModel.count(query);
+        const totalDocentes = await docenteModel.count(query);
         res.status(200).json({
-            error:false,
-            descripcion:'consulta Exitosa',            
-            docentes: docentes, totalDocentes })
+            error: false,
+            descripcion: 'consulta Exitosa',
+            docentes: docentes, totalDocentes
+        })
     } catch (error) {
         console.error(error);
         res.status(500).json({
@@ -96,7 +92,7 @@ route.get('/all', verifyToken, async (req, res) => {
     }
 })
 
-route.get('/allNotPaginated', verifyToken, async (req, res) => {
+router.get('/allNotPaginated', verifyToken, async (req, res) => {
     let query = {}
     //Datos para los filtros
     let search = req.query.search;
@@ -130,7 +126,7 @@ route.get('/allNotPaginated', verifyToken, async (req, res) => {
     }
 })
 
-route.get('/allNotPaginatedNT', async (req, res) => {
+router.get('/allNotPaginatedNT', async (req, res) => {
     let query = {}
     //Datos para los filtros
     let search = req.query.search;
@@ -164,7 +160,7 @@ route.get('/allNotPaginatedNT', async (req, res) => {
     }
 })
 
-route.post('/byListIds', verifyToken, async (req, res) => {
+router.post('/byListIds', verifyToken, async (req, res) => {
     try {
         let query = {}
 
@@ -204,14 +200,15 @@ route.post('/byListIds', verifyToken, async (req, res) => {
     }
 })
 
-route.get('/:id', verifyToken, async (req, res) => {
+router.get('/:id', verifyToken, async (req, res) => {
     const id = req.params.id;
     const docente = await docenteModel.findById(id);
     try {
         res.status(200).json({
-            error:false,
-            descripcion:'Consulta Exitosa',
-            docente:docente})
+            error: false,
+            descripcion: 'Consulta Exitosa',
+            docente: docente
+        })
     } catch (error) {
         console.error(error);
         res.status(500).json({
@@ -221,9 +218,9 @@ route.get('/:id', verifyToken, async (req, res) => {
     }
 })
 
-route.delete('/:id', verifyToken, async (req, res) => {
+router.delete('/:id', verifyToken, async (req, res) => {
     const docenteId = req.params.id;
-    
+
     try {
         const docenteDelete = await docenteModel.remove({
             _id: id
@@ -238,14 +235,15 @@ route.delete('/:id', verifyToken, async (req, res) => {
     }
 
 })
-route.patch('/:id', verifyToken, async (req, res) => {
+
+router.patch('/:id', verifyToken, async (req, res) => {
 
     const docenteValidar = await docenteModel.findOne({ correo: req.body.correo })
     if (docenteValidar) return res.status(400).json({
         error: "Validación Datos",
         descripcion: 'El Correo ya existe'
-    }); 
-    
+    });
+
     const docenteId = req.params.id;
     const docente = {
         nombre: req.body.nombre,
@@ -253,7 +251,7 @@ route.patch('/:id', verifyToken, async (req, res) => {
         documento: req.body.documento,
         fechaActualizacion: new Date(),
     };
-   
+
     try {
         const update = await docenteModel.updateOne({
             _id: docenteId
@@ -271,8 +269,7 @@ route.patch('/:id', verifyToken, async (req, res) => {
 
 })
 
-
-route.delete('/delete/:id', verifyToken, async (req, res) => {
+router.delete('/delete/:id', verifyToken, async (req, res) => {
 
     const docenteId = req.params.id;
     const docente = {
@@ -280,9 +277,9 @@ route.delete('/delete/:id', verifyToken, async (req, res) => {
         correo: req.body.correo,
         documento: req.body.documento,
         fechaActualizacion: new Date(),
-        estado:false
+        estado: false
     };
-   
+
     try {
         const update = await docenteModel.updateOne({
             _id: docenteId
@@ -300,5 +297,4 @@ route.delete('/delete/:id', verifyToken, async (req, res) => {
 
 })
 
-
-module.exports = route
+module.exports = router

@@ -1,20 +1,14 @@
-const express = require('express')
-const mongoose= require('mongoose')
+const router = require('express').Router();
 const asignaturaModel = require('../models/asignatura')
 const areaModel = require('../models/area')
 const planModel = require('../models/plan')
 const programaModel = require('../models/programa')
-const docenteModel = require('../models/docente')
-const route = express.Router()
-const jwt = require('jsonwebtoken')
-const verifyToken = require('./validarToken')
+const verifyToken = require('../util/tokenValidation')
 const { paginationSize } = require('../constants/constants')
 
 const TemplateHtml = require('../constants/templateConstant')
 
-
-
-route.post('/add', verifyToken, async (req, res) => {
+router.post('/add', verifyToken, async (req, res) => {
     try {
         const asignaturaValidar = await asignaturaModel.findOne({ codigo: req.body.codigo })
         if (asignaturaValidar) return res.status(400).json({
@@ -22,16 +16,16 @@ route.post('/add', verifyToken, async (req, res) => {
             descripcion: 'El código ya existe'
         });
 
-        let hPractica = req.body.intensidadHorariaPractica ? parseInt(req.body.intensidadHorariaPractica):0;
+        let hPractica = req.body.intensidadHorariaPractica ? parseInt(req.body.intensidadHorariaPractica) : 0;
         let hTeorica = req.body.intensidadHorariaTeorica ? parseInt(req.body.intensidadHorariaTeorica) : 0;
         let hIndependiente = req.body.intensidadHorariaIndependiente ? parseInt(req.body.intensidadHorariaIndependiente) : 0;
-        if (req.body.asignaturaTipo === 0){
+        if (req.body.asignaturaTipo === 0) {
             hPractica = 0;
-        }else if (req.body.asignaturaTipo === 1){
-            hPractica= 0;
+        } else if (req.body.asignaturaTipo === 1) {
+            hPractica = 0;
         }
-        let hTotal = hTeorica+hPractica+hIndependiente
-        let hTotalRelacion = `${hPractica+hTeorica}/${hIndependiente}`
+        let hTotal = hTeorica + hPractica + hIndependiente
+        let hTotalRelacion = `${hPractica + hTeorica}/${hIndependiente}`
 
         const asignatura = new asignaturaModel({
             nombre: req.body.nombre,
@@ -79,7 +73,8 @@ route.post('/add', verifyToken, async (req, res) => {
     }
 
 })
-route.get('/all', verifyToken, async (req, res) => {
+
+router.get('/all', verifyToken, async (req, res) => {
     try {
         let pageNumber = req.query.page ? req.query.page * 1 : 0;
         let query = {}
@@ -131,7 +126,7 @@ route.get('/all', verifyToken, async (req, res) => {
     }
 })
 
-route.get('/allNotPaginatedWithPlanCode', verifyToken, async (req, res) => {
+router.get('/allNotPaginatedWithPlanCode', verifyToken, async (req, res) => {
     try {
         let query = {}
 
@@ -156,22 +151,22 @@ route.get('/allNotPaginatedWithPlanCode', verifyToken, async (req, res) => {
         var newAsignaturas = [];
         if (asignaturas.length) {
             for (let i = 0; i < asignaturas.length; i++) {
-                const area = await areaModel.find({ 'asignatura._id' : asignaturas[i]._id });
-                if (area && area[0]){
+                const area = await areaModel.find({ 'asignatura._id': asignaturas[i]._id });
+                if (area && area[0]) {
                     var plan;
-                    if (area[1]){
-                        plan = await planModel.find({'area._id' : area[1]._id})
-                    }else {
-                        plan = await planModel.find({'area._id' : area[0]._id})
+                    if (area[1]) {
+                        plan = await planModel.find({ 'area._id': area[1]._id })
+                    } else {
+                        plan = await planModel.find({ 'area._id': area[0]._id })
                     }
-                    if(plan && plan.length > 0){
+                    if (plan && plan.length > 0) {
                         var asignaturaObj;
-                        if (plan[1]){
+                        if (plan[1]) {
                             asignaturaObj = {
                                 asignatura: asignaturas[i],
                                 codigoPlan: plan[1].codigo
                             }
-                        }else{
+                        } else {
                             asignaturaObj = {
                                 asignatura: asignaturas[i],
                                 codigoPlan: plan[0].codigo
@@ -187,7 +182,7 @@ route.get('/allNotPaginatedWithPlanCode', verifyToken, async (req, res) => {
             descripcion: "Consulta Exitosa",
             asignaturas: newAsignaturas
         })
-    }catch (error) {
+    } catch (error) {
         console.error(error);
         res.status(500).json({
             error: true,
@@ -196,7 +191,7 @@ route.get('/allNotPaginatedWithPlanCode', verifyToken, async (req, res) => {
     }
 })
 
-route.get('/allNotPaginatedWithPlanCodeNoToken', async (req, res) => {
+router.get('/allNotPaginatedWithPlanCodeNoToken', async (req, res) => {
     try {
         let query = {}
 
@@ -221,22 +216,22 @@ route.get('/allNotPaginatedWithPlanCodeNoToken', async (req, res) => {
         var newAsignaturas = [];
         if (asignaturas.length) {
             for (let i = 0; i < asignaturas.length; i++) {
-                const area = await areaModel.find({ 'asignatura._id' : asignaturas[i]._id });
-                if (area && area[0]){
+                const area = await areaModel.find({ 'asignatura._id': asignaturas[i]._id });
+                if (area && area[0]) {
                     var plan;
-                    if (area[1]){
-                        plan = await planModel.find({'area._id' : area[1]._id})
-                    }else {
-                        plan = await planModel.find({'area._id' : area[0]._id})
+                    if (area[1]) {
+                        plan = await planModel.find({ 'area._id': area[1]._id })
+                    } else {
+                        plan = await planModel.find({ 'area._id': area[0]._id })
                     }
-                    if(plan){
+                    if (plan) {
                         var asignaturaObj;
-                        if (plan[1]){
+                        if (plan[1]) {
                             asignaturaObj = {
                                 asignatura: asignaturas[i],
                                 codigoPlan: plan[1].codigo
                             }
-                        }else{
+                        } else {
                             asignaturaObj = {
                                 asignatura: asignaturas[i],
                                 codigoPlan: plan[0].codigo
@@ -252,7 +247,7 @@ route.get('/allNotPaginatedWithPlanCodeNoToken', async (req, res) => {
             descripcion: "Consulta Exitosa",
             asignaturas: newAsignaturas
         })
-    }catch (error) {
+    } catch (error) {
         console.error(error);
         res.status(500).json({
             error: true,
@@ -261,7 +256,7 @@ route.get('/allNotPaginatedWithPlanCodeNoToken', async (req, res) => {
     }
 })
 
-route.get('/allNotPaginated', verifyToken, async (req, res) => {
+router.get('/allNotPaginated', verifyToken, async (req, res) => {
     try {
         let query = {}
 
@@ -288,7 +283,7 @@ route.get('/allNotPaginated', verifyToken, async (req, res) => {
             descripcion: "Consulta Exitosa",
             asignaturas: asignaturas
         })
-    }catch (error) {
+    } catch (error) {
         console.error(error);
         res.status(500).json({
             error: true,
@@ -297,7 +292,7 @@ route.get('/allNotPaginated', verifyToken, async (req, res) => {
     }
 })
 
-route.post('/getAllAsignaturasByPlan', verifyToken, async (req, res) => {
+router.post('/getAllAsignaturasByPlan', verifyToken, async (req, res) => {
     try {
         let query = {}
 
@@ -356,7 +351,7 @@ route.post('/getAllAsignaturasByPlan', verifyToken, async (req, res) => {
     }
 })
 
-route.post('/byListIds', verifyToken, async (req, res) => {
+router.post('/byListIds', verifyToken, async (req, res) => {
     try {
         let query = {}
 
@@ -396,7 +391,7 @@ route.post('/byListIds', verifyToken, async (req, res) => {
     }
 })
 
-route.post('/byListIdsPaginated', verifyToken, async (req, res) => {
+router.post('/byListIdsPaginated', verifyToken, async (req, res) => {
     try {
         let pageNumber = req.body.page ? req.body.page * 1 : 0;
         let query = {}
@@ -428,7 +423,7 @@ route.post('/byListIdsPaginated', verifyToken, async (req, res) => {
     }
 })
 
-route.post('/byListIdsPaginatedNT', async (req, res) => {
+router.post('/byListIdsPaginatedNT', async (req, res) => {
     try {
         let pageNumber = req.body.page ? req.body.page * 1 : 0;
         let query = {}
@@ -460,7 +455,7 @@ route.post('/byListIdsPaginatedNT', async (req, res) => {
     }
 })
 
-route.get('/:id', verifyToken, async (req, res) => {
+router.get('/:id', verifyToken, async (req, res) => {
     const id = req.params.id;
 
     try {
@@ -483,7 +478,7 @@ route.get('/:id', verifyToken, async (req, res) => {
     }
 })
 
-route.delete('/:id', verifyToken, async (req, res) => {
+router.delete('/:id', verifyToken, async (req, res) => {
     const id = req.params.id;
 
     try {
@@ -507,7 +502,7 @@ route.delete('/:id', verifyToken, async (req, res) => {
 
 })
 
-route.patch('/:id', verifyToken, async (req, res) => {
+router.patch('/:id', verifyToken, async (req, res) => {
     try {
         const id = req.params.id;
 
@@ -517,20 +512,20 @@ route.patch('/:id', verifyToken, async (req, res) => {
             descripcion: 'El código no existe'
         });
 
-        let hPractica = req.body.intensidadHorariaPractica ? parseInt(req.body.intensidadHorariaPractica):0;
+        let hPractica = req.body.intensidadHorariaPractica ? parseInt(req.body.intensidadHorariaPractica) : 0;
         let hTeorica = req.body.intensidadHorariaTeorica ? parseInt(req.body.intensidadHorariaTeorica) : 0;
         let hIndependiente = req.body.intensidadHorariaIndependiente ? parseInt(req.body.intensidadHorariaIndependiente) : 0;
         req.body.fechaActualizacion = new Date();
-        if (req.body.asignaturaTipo === 0){
+        if (req.body.asignaturaTipo === 0) {
             hPractica = 0;
-        }else if (req.body.asignaturaTipo === 1){
-            hPractica= 0;
+        } else if (req.body.asignaturaTipo === 1) {
+            hPractica = 0;
         }
-        let hTotal = hTeorica+hPractica+hIndependiente
-        let hTotalRelacion = `${hPractica+hTeorica}/${hIndependiente}`
+        let hTotal = hTeorica + hPractica + hIndependiente
+        let hTotalRelacion = `${hPractica + hTeorica}/${hIndependiente}`
 
         req.body.intensidadHorariaRelacion = hTotalRelacion;
-        req.body.intensidadHoraria  = hTotal;
+        req.body.intensidadHoraria = hTotal;
 
         const update = await asignaturaModel.updateOne({
             _id: id
@@ -553,7 +548,7 @@ route.patch('/:id', verifyToken, async (req, res) => {
 
 })
 
-route.post('/getEquivalenciaByAsignatura', verifyToken, async (req, res) => {
+router.post('/getEquivalenciaByAsignatura', verifyToken, async (req, res) => {
     try {
         let query = {}
 
@@ -568,22 +563,22 @@ route.post('/getEquivalenciaByAsignatura', verifyToken, async (req, res) => {
         var newEquivalenciasList = [];
         if (equivalencias.length) {
             for (let i = 0; i < equivalencias.length; i++) {
-                const area = await areaModel.find({ 'asignatura._id' : equivalencias[i]._id });
-                if (area){
+                const area = await areaModel.find({ 'asignatura._id': equivalencias[i]._id });
+                if (area) {
                     var plan;
-                    if (area[1]){
-                        plan = await planModel.find({'area._id' : area[1]._id})
-                    }else {
-                        plan = await planModel.find({'area._id' : area[0]._id})
+                    if (area[1]) {
+                        plan = await planModel.find({ 'area._id': area[1]._id })
+                    } else {
+                        plan = await planModel.find({ 'area._id': area[0]._id })
                     }
-                    if(plan){
+                    if (plan) {
                         var equivalenciaObj;
-                        if (plan[1]){
+                        if (plan[1]) {
                             equivalenciaObj = {
                                 equivalencia: equivalencias[i],
                                 codigoPlan: plan[1].codigo
                             }
-                        }else{
+                        } else {
                             equivalenciaObj = {
                                 equivalencia: equivalencias[i],
                                 codigoPlan: plan[0].codigo
@@ -611,7 +606,7 @@ route.post('/getEquivalenciaByAsignatura', verifyToken, async (req, res) => {
     }
 })
 
-route.post('/getEquivalenciaByAsignaturaNT', async (req, res) => {
+router.post('/getEquivalenciaByAsignaturaNT', async (req, res) => {
     try {
         let query = {}
 
@@ -639,106 +634,104 @@ route.post('/getEquivalenciaByAsignaturaNT', async (req, res) => {
     }
 })
 
-
-route.post('/getFile', async (req, res) => {
-    var pdf = require('html-pdf');
+router.post('/getFile', async (req, res) => {
+    const pdf = require('html-pdf');
 
     //Se obtienen datos necesarios que no llegan en el request para llenado de platilla
-try{
-    const area = await areaModel.findOne({ 'asignatura._id' : req.body._id });
-    let plan;
-    let programa;
-    if (area)
-    {
-        plan = await planModel.findOne({'area._id' : area._id})
-        if (plan)
-        {
-            programa = await programaModel.findOne({'plan._id' : plan._id})
+    try {
+        const area = await areaModel.findOne({ 'asignatura._id': req.body._id });
+        let plan;
+        let programa;
+        if (area) {
+            plan = await planModel.findOne({ 'area._id': area._id })
+            if (plan) {
+                programa = await programaModel.findOne({ 'plan._id': plan._id })
+            }
         }
-    }
 
-    //Se obtiene la plantilla del modulo templateHtml
-    let fileString = TemplateHtml.module.toString();
+        //Se obtiene la plantilla del modulo templateHtml
+        let fileString = TemplateHtml.module.toString();
 
-    //Llenado de data en la plantilla html con datos de la asignatura.
-    //programa data
-    if (programa){
-        fileString = fileString.replace('[programa]', programa.nombre ?? '')
-    }else{
-        fileString = fileString.replace('[programa]', '')
-    }
-
-    //area data
-    if(area){
-        fileString = fileString.replace('[area]', area.nombre ?? '')
-    }else{
-        fileString = fileString.replace('[area]', '')
-    }
-
-
-    //asignatura data
-    fileString = fileString.replace('[asignatura]', req.body.nombre ?? '')
-    fileString = fileString.replace('[prerrequisitos]', req.body.prerrequisitos ?? '')
-    fileString = fileString.replace('[correquisitos]', req.body.correquisitos ?? '')
-    fileString = fileString.replace('[codigo]', req.body.codigo ?? '')
-
-    //Se ejecuta dos veces dado que la plantilla los campos horas_teorica y horas_practica estan dos veces
-    for (let i = 0; i < 2; i++) {
-        fileString = fileString.replace('[horas_teorica]', req.body.intensidadHorariaTeorica ?? '')
-        fileString = fileString.replace('[horas_practica]', req.body.intensidadHorariaPractica ?? '')
-    }
-    fileString = fileString.replace('[horas_independiente]', req.body.intensidadHorariaIndependiente ?? '')
-    fileString = fileString.replace('[horas_total]', req.body.intensidadHoraria ?? '')
-    fileString = fileString.replace('[creditos]', req.body.cantidadCredito ?? '')
-    fileString = fileString.replace('[htp_hti]', req.body.intensidadHorariaRelacion ?? '')
-    fileString = fileString.replace('[presentacion]', req.body.presentacionAsignatura ?? '')
-    fileString = fileString.replace('[presentacion]', req.body.presentacionAsignatura ?? '')
-    fileString = fileString.replace('[justificacion]', req.body.justificacionAsignatura ?? '')
-    fileString = fileString.replace('[objetivo_general]', req.body.objetivoGeneral ?? '')
-    fileString = fileString.replace('[objetivos_especificos]', req.body.objetivosEspecificos ?? '')
-    fileString = fileString.replace('[competencias]', req.body.competencias ?? '')
-    fileString = fileString.replace('[medios]', req.body.mediosEducativos ?? '')
-    fileString = fileString.replace('[evaluacion]', req.body.evaluacion ?? '')
-    fileString = fileString.replace('[bibliografia]', req.body.bibliografia ?? '')
-    fileString = fileString.replace('[cibergrafia]', req.body.cibergrafia ?? '')
-
-    //Contenido data. Se ejecuta 6 veces dada la cantidad de contenidos de la plantilla. Max 6
-    for (let i=0; i < 6; i++){
-        if (req.body.contenido && req.body.contenido[i]){
-            fileString = fileString.replace(`[tema_${i+1}]`, req.body.contenido[i].nombre ?? '' )
-            fileString = fileString.replace(`[subtemas_${i+1}]`, req.body.contenido[i].descripcion ?? '')
-        }else{
-            fileString = fileString.replace(`[tema_${i+1}]`, '' )
-            fileString = fileString.replace(`[subtemas_${i+1}]`, '')
+        //Llenado de data en la plantilla html con datos de la asignatura.
+        //programa data
+        if (programa) {
+            fileString = fileString.replace('[programa]', programa.nombre ?? '')
+        } else {
+            fileString = fileString.replace('[programa]', '')
         }
-    }
 
-    //Make break lines on file
-    const search = '\n';
-    const replaceWith = '<br>';
-    fileString = fileString.split(search).join(replaceWith);
-
-    //Config pdf
-    var config = {format: 'A4',
-        border: {
-            top: "0.2in",
-            right: "0.4in",
-            bottom: "0.2in",
-            left: "0.4in"
-        },
-    };
-    pdf.create(fileString, config).toStream(function (err, pdfStream) {
-        if (err) return console.log(err);
-        else{
-            res.status(200)
-            pdfStream.on('end', ()=> {
-                return res.end()
-            })
-            res.attachment('FD-GC70.pdf')
-            pdfStream.pipe(res)
+        //area data
+        if (area) {
+            fileString = fileString.replace('[area]', area.nombre ?? '')
+        } else {
+            fileString = fileString.replace('[area]', '')
         }
-     });
-    }catch (error){
+
+
+        //asignatura data
+        fileString = fileString.replace('[asignatura]', req.body.nombre ?? '')
+        fileString = fileString.replace('[prerrequisitos]', req.body.prerrequisitos ?? '')
+        fileString = fileString.replace('[correquisitos]', req.body.correquisitos ?? '')
+        fileString = fileString.replace('[codigo]', req.body.codigo ?? '')
+
+        //Se ejecuta dos veces dado que la plantilla los campos horas_teorica y horas_practica estan dos veces
+        for (let i = 0; i < 2; i++) {
+            fileString = fileString.replace('[horas_teorica]', req.body.intensidadHorariaTeorica ?? '')
+            fileString = fileString.replace('[horas_practica]', req.body.intensidadHorariaPractica ?? '')
+        }
+        fileString = fileString.replace('[horas_independiente]', req.body.intensidadHorariaIndependiente ?? '')
+        fileString = fileString.replace('[horas_total]', req.body.intensidadHoraria ?? '')
+        fileString = fileString.replace('[creditos]', req.body.cantidadCredito ?? '')
+        fileString = fileString.replace('[htp_hti]', req.body.intensidadHorariaRelacion ?? '')
+        fileString = fileString.replace('[presentacion]', req.body.presentacionAsignatura ?? '')
+        fileString = fileString.replace('[presentacion]', req.body.presentacionAsignatura ?? '')
+        fileString = fileString.replace('[justificacion]', req.body.justificacionAsignatura ?? '')
+        fileString = fileString.replace('[objetivo_general]', req.body.objetivoGeneral ?? '')
+        fileString = fileString.replace('[objetivos_especificos]', req.body.objetivosEspecificos ?? '')
+        fileString = fileString.replace('[competencias]', req.body.competencias ?? '')
+        fileString = fileString.replace('[medios]', req.body.mediosEducativos ?? '')
+        fileString = fileString.replace('[evaluacion]', req.body.evaluacion ?? '')
+        fileString = fileString.replace('[bibliografia]', req.body.bibliografia ?? '')
+        fileString = fileString.replace('[cibergrafia]', req.body.cibergrafia ?? '')
+
+        //Contenido data. Se ejecuta 6 veces dada la cantidad de contenidos de la plantilla. Max 6
+        for (let i = 0; i < 6; i++) {
+            if (req.body.contenido && req.body.contenido[i]) {
+                fileString = fileString.replace(`[tema_${i + 1}]`, req.body.contenido[i].nombre ?? '')
+                fileString = fileString.replace(`[subtemas_${i + 1}]`, req.body.contenido[i].descripcion ?? '')
+            } else {
+                fileString = fileString.replace(`[tema_${i + 1}]`, '')
+                fileString = fileString.replace(`[subtemas_${i + 1}]`, '')
+            }
+        }
+
+        //Make break lines on file
+        const search = '\n';
+        const replaceWith = '<br>';
+        fileString = fileString.split(search).join(replaceWith);
+
+        //Config pdf
+        var config = {
+            format: 'A4',
+            border: {
+                top: "0.2in",
+                right: "0.4in",
+                bottom: "0.2in",
+                left: "0.4in"
+            },
+        };
+        pdf.create(fileString, config).toStream(function (err, pdfStream) {
+            if (err) return console.log(err);
+            else {
+                res.status(200)
+                pdfStream.on('end', () => {
+                    return res.end()
+                })
+                res.attachment('FD-GC70.pdf')
+                pdfStream.pipe(res)
+            }
+        });
+    } catch (error) {
         console.error(error);
         res.status(500).json({
             error: true,
@@ -747,8 +740,7 @@ try{
     }
 })
 
-
-route.post('/getAllAsignaturasByDocente', verifyToken, async (req, res) => {
+router.post('/getAllAsignaturasByDocente', verifyToken, async (req, res) => {
     try {
 
         const asignaturas = await asignaturaModel.find();
@@ -756,10 +748,10 @@ route.post('/getAllAsignaturasByDocente', verifyToken, async (req, res) => {
         if (asignaturas.length) {
             for (let i = 0; i < asignaturas.length; i++) {
                 var docenteIds = asignaturas[i].docente.map(x => x._id.toString())
-                if (docenteIds.length > 0){
-                    for (let j = 0; j < docenteIds.length; j++){
-                        if (docenteIds[j] === req.body.docenteId){
-                            asignaturasByDocente.push(asignaturas[i])  
+                if (docenteIds.length > 0) {
+                    for (let j = 0; j < docenteIds.length; j++) {
+                        if (docenteIds[j] === req.body.docenteId) {
+                            asignaturasByDocente.push(asignaturas[i])
                         }
                     }
                 }
@@ -790,4 +782,4 @@ route.post('/getAllAsignaturasByDocente', verifyToken, async (req, res) => {
     }
 })
 
-module.exports = route
+module.exports = router

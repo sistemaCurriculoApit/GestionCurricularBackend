@@ -1,23 +1,18 @@
-const express = require('express')
+const router = require('express').Router()
 const programaModel = require('../models/programa')
-const jwt = require('jsonwebtoken')
-const verify = require('./validarToken')
-const verifyToken = require('./validarToken')
-const route = express.Router()
+const verifyToken = require('../util/tokenValidation')
 const { paginationSize } = require('../constants/constants')
 
-
-
-route.post('/add', verifyToken, async (req, res) => {
+router.post('/add', verifyToken, async (req, res) => {
     try {
 
         const programaValidar = await programaModel.findOne({ codigo: req.body.codigo });
         if (programaValidar) return res.status(400).json({
             error: true,
             descripcion: 'El código del programa ya existe'
-    
+
         });
-    
+
 
         const programa = new programaModel({
             nombre: req.body.nombre,
@@ -41,7 +36,7 @@ route.post('/add', verifyToken, async (req, res) => {
 
 })
 
-route.get('/all', verifyToken, async (req, res) => {
+router.get('/all', verifyToken, async (req, res) => {
 
     try {
         let pageNumber = req.query.page ? req.query.page * 1 : 0;
@@ -91,7 +86,7 @@ route.get('/all', verifyToken, async (req, res) => {
     }
 })
 
-route.get('/allNotPaginated',verifyToken, async (req, res) => {
+router.get('/allNotPaginated', verifyToken, async (req, res) => {
     try {
         let query = {}
 
@@ -126,7 +121,7 @@ route.get('/allNotPaginated',verifyToken, async (req, res) => {
     }
 })
 
-route.get('/allNotPaginatedNT', async (req, res) => {
+router.get('/allNotPaginatedNT', async (req, res) => {
     try {
         let query = {}
 
@@ -161,7 +156,7 @@ route.get('/allNotPaginatedNT', async (req, res) => {
     }
 })
 
-route.get('/:id', verifyToken, async (req, res) => {
+router.get('/:id', verifyToken, async (req, res) => {
     const id = req.params.id;
     const programa = await programaModel.findById(id);
     try {
@@ -171,7 +166,7 @@ route.get('/:id', verifyToken, async (req, res) => {
     }
 })
 
-route.delete('/:id', verifyToken, async (req, res) => {
+router.delete('/:id', verifyToken, async (req, res) => {
     const programaId = req.params.id;
     const programa = programaModel.remove({
         _id: id
@@ -184,15 +179,15 @@ route.delete('/:id', verifyToken, async (req, res) => {
 
 })
 
-route.patch('/:id', verifyToken, async (req, res) => {
+router.patch('/:id', verifyToken, async (req, res) => {
     try {
         const programaValidar = await programaModel.findOne({ codigo: req.body.codigo });
         if (programaValidar && programaValidar._id.toString() !== req.params.id) return res.status(400).json({
             error: true,
             descripcion: 'El código del programa ya existe'
-    
+
         });
-        
+
         const id = req.params.id;
         const programa = {
             nombre: req.body.nombre,
@@ -217,5 +212,4 @@ route.patch('/:id', verifyToken, async (req, res) => {
 
 })
 
-
-module.exports = route
+module.exports = router

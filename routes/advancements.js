@@ -1,26 +1,17 @@
-const express = require('express')
-const mongoose = require('mongoose');
-const Schema = mongoose.Schema;
-const ObjectId = Schema.Types.ObjectId;
+const router = require('express').Router()
 const avanceModel = require('../models/avance')
 const docenteModel = require('../models/docente')
-const jwt = require('jsonwebtoken')
-const verify = require('./validarToken')
-const verifyToken = require('./validarToken')
-const route = express.Router()
 const { paginationSize } = require('../constants/constants')
 
-
-
-route.post('/add', verifyToken, async (req, res) => {
+router.post('/add', async (req, res) => {
   try {
     const avance = new avanceModel({
       programaId: req.body.programaId,
       planId: req.body.planId,
-      areaId:req.body.areaId,
-      asignaturaId:req.body.asignaturaId,
-      docenteId:req.body.docenteId,
-      contenido:req.body.contenido,
+      areaId: req.body.areaId,
+      asignaturaId: req.body.asignaturaId,
+      docenteId: req.body.docenteId,
+      contenido: req.body.contenido,
       añoAvance: req.body.añoAvance,
       periodo: req.body.periodo,
       porcentajeAvance: req.body.porcentajeAvance,
@@ -41,7 +32,7 @@ route.post('/add', verifyToken, async (req, res) => {
 
 })
 
-route.get('/all', verifyToken, async (req, res) => {
+router.get('/all', async (req, res) => {
 
   try {
     let pageNumber = req.query.page ? req.query.page * 1 : 0;
@@ -90,8 +81,7 @@ route.get('/all', verifyToken, async (req, res) => {
   }
 })
 
-
-route.get('/allByDocenteEmail', verifyToken, async (req, res) => {
+router.get('/allByDocenteEmail', async (req, res) => {
 
   try {
     let pageNumber = req.query.page ? req.query.page * 1 : 0;
@@ -102,7 +92,7 @@ route.get('/allByDocenteEmail', verifyToken, async (req, res) => {
     let dateCreationFrom = req.query.dateCreationFrom;
     let dateCreationTo = req.query.dateCreationTo;
 
-    let docente = await docenteModel.findOne({correo: req.query.emailDocente})
+    let docente = await docenteModel.findOne({ correo: req.query.emailDocente })
 
     if (!docente) return res.status(400).json({
       error: "Validación Datos",
@@ -128,11 +118,11 @@ route.get('/allByDocenteEmail', verifyToken, async (req, res) => {
       }
       query = {
         $and: [query, or],
-        $and: [{'docenteId' : docente._id}]
+        $and: [{ 'docenteId': docente._id }]
       };
-    }else {
+    } else {
       query = {
-        $and: [{'docenteId' : docente._id}]
+        $and: [{ 'docenteId': docente._id }]
       };
     }
 
@@ -151,7 +141,7 @@ route.get('/allByDocenteEmail', verifyToken, async (req, res) => {
   }
 })
 
-route.get('/allNotPaginated', verifyToken, async (req, res) => {
+router.get('/allNotPaginated', async (req, res) => {
   try {
     let query = {}
 
@@ -188,7 +178,8 @@ route.get('/allNotPaginated', verifyToken, async (req, res) => {
     })
   }
 })
-route.post('/allByAsignatura', verifyToken, async (req, res) => {
+
+router.post('/allByAsignatura', async (req, res) => {
   try {
     let query = {}
     let pageNumber = req.body.page ? req.body.page * 1 : 0;
@@ -200,11 +191,11 @@ route.post('/allByAsignatura', verifyToken, async (req, res) => {
     let periodo = req.body.periodo;
     let asignaturaId = req.body.asignaturaId;
 
-    query = {añoAvance:{$eq:añoAvance},periodo:{$eq:periodo},asignaturaId:{$eq:asignaturaId}}
+    query = { añoAvance: { $eq: añoAvance }, periodo: { $eq: periodo }, asignaturaId: { $eq: asignaturaId } }
 
     const avances = await avanceModel.find(query).skip(pageNumber > 0 ? (pageNumber * paginationSizeLocal) : 0)
-    .limit(paginationSizeLocal).sort({ fechaCreacion: -1 });
-    
+      .limit(paginationSizeLocal).sort({ fechaCreacion: -1 });
+
     const totalAvances = await avanceModel.count(query);
 
     res.status(200).json({
@@ -222,7 +213,7 @@ route.post('/allByAsignatura', verifyToken, async (req, res) => {
   }
 })
 
-route.post('/allByDocente', verifyToken, async (req, res) => {
+router.post('/allByDocente', async (req, res) => {
   try {
     let query = {}
     let pageNumber = req.body.page ? req.body.page * 1 : 0;
@@ -233,11 +224,11 @@ route.post('/allByDocente', verifyToken, async (req, res) => {
     let periodo = req.body.periodo;
     let docenteId = req.body.docenteId;
 
-    query = {añoAvance:{$eq:añoAvance},periodo:{$eq:periodo},docenteId:{$eq:docenteId}}
+    query = { añoAvance: { $eq: añoAvance }, periodo: { $eq: periodo }, docenteId: { $eq: docenteId } }
 
     const avances = await avanceModel.find(query).skip(pageNumber > 0 ? (pageNumber * paginationSizeLocal) : 0)
-    .limit(paginationSizeLocal).sort({ fechaCreacion: -1 });
-    
+      .limit(paginationSizeLocal).sort({ fechaCreacion: -1 });
+
     const totalAvances = await avanceModel.count(query);
 
     res.status(200).json({
@@ -255,7 +246,7 @@ route.post('/allByDocente', verifyToken, async (req, res) => {
   }
 })
 
-route.post('/allByPeriodo', verifyToken, async (req, res) => {
+router.post('/allByPeriodo', async (req, res) => {
   try {
     let query = {}
     let pageNumber = req.body.page ? req.body.page * 1 : 0;
@@ -264,11 +255,11 @@ route.post('/allByPeriodo', verifyToken, async (req, res) => {
     let añoAvance = req.body.añoAvance;
     let periodo = req.body.periodo;
 
-    query = {añoAvance:{$eq:añoAvance},periodo:{$eq:periodo}}
+    query = { añoAvance: { $eq: añoAvance }, periodo: { $eq: periodo } }
 
     const avances = await avanceModel.find(query).skip(pageNumber > 0 ? (pageNumber * paginationSize) : 0)
-    .limit(paginationSize).sort({ fechaCreacion: -1 });
-    
+      .limit(paginationSize).sort({ fechaCreacion: -1 });
+
     const totalAvances = await avanceModel.count(query);
 
     res.status(200).json({
@@ -286,8 +277,7 @@ route.post('/allByPeriodo', verifyToken, async (req, res) => {
   }
 })
 
-
-route.get('/:id', verifyToken, async (req, res) => {
+router.get('/:id', async (req, res) => {
   const id = req.params.id;
   const homologacion = await avanceModel.findById(id);
   try {
@@ -297,7 +287,7 @@ route.get('/:id', verifyToken, async (req, res) => {
   }
 })
 
-route.delete('/:id', verifyToken, async (req, res) => {
+router.delete('/:id', async (req, res) => {
   const homologacionId = req.params.id;
   const homologacion = avanceModel.remove({
     _id: id
@@ -310,16 +300,16 @@ route.delete('/:id', verifyToken, async (req, res) => {
 
 })
 
-route.patch('/:id', verifyToken, async (req, res) => {
+router.patch('/:id', async (req, res) => {
   try {
     const id = req.params.id;
     const homologacion = {
       programaId: req.body.programaId,
       planId: req.body.planId,
-      areaId:req.body.areaId,
-      asignaturaId:req.body.asignaturaId,
-      docenteId:req.body.docenteId,
-      contenido:req.body.contenido,
+      areaId: req.body.areaId,
+      asignaturaId: req.body.asignaturaId,
+      docenteId: req.body.docenteId,
+      contenido: req.body.contenido,
       añoAvance: req.body.añoAvance,
       periodo: req.body.periodo,
       porcentajeAvance: req.body.porcentajeAvance,
@@ -342,5 +332,4 @@ route.patch('/:id', verifyToken, async (req, res) => {
 
 })
 
-
-module.exports = route
+module.exports = router

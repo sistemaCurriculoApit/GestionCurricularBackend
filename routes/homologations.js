@@ -1,35 +1,26 @@
-const express = require('express')
-const mongoose = require('mongoose');
-const Schema = mongoose.Schema;
-const ObjectId = Schema.Types.ObjectId;
+const router = require('express').Router()
 const homologacionModel = require('../models/homologacion')
 const estudianteModel = require('../models/estudiante')
-const jwt = require('jsonwebtoken')
-const verify = require('./validarToken')
-const verifyToken = require('./validarToken')
-const route = express.Router()
-const { paginationSize, userProfilesObject } = require('../constants/constants')
+const { paginationSize } = require('../constants/constants')
 
-
-
-route.post('/add', verifyToken, async (req, res) => {
+router.post('/add', async (req, res) => {
   try {
 
     const estudiante = await estudianteModel.findById(req.body.estudianteId)
 
-    if (!estudiante || !estudiante.estado){
+    if (!estudiante || !estudiante.estado) {
       return res.status(400).json({
         error: "Validación Datos",
         descripcion: 'Estudiante inexistente o inactivo.'
-    });
+      });
     }
 
-    let estado = req.body.estadoHomologacion ? parseInt(req.body.estadoHomologacion):0;
+    let estado = req.body.estadoHomologacion ? parseInt(req.body.estadoHomologacion) : 0;
 
     const homologacion = new homologacionModel({
       programaId: req.body.programaId,
       planId: req.body.planId,
-      asignaturaId:req.body.asignaturaId,
+      asignaturaId: req.body.asignaturaId,
       identificacionSolicitante: req.body.identificacionSolicitante,
       nombreSolicitante: req.body.nombreSolicitante,
       universidadSolicitante: req.body.universidadSolicitante,
@@ -49,9 +40,9 @@ route.post('/add', verifyToken, async (req, res) => {
     estudiante.homologacion.push(save);
     const updateEstudiante = await estudianteModel.updateOne({
       _id: estudiante._id
-      }, {
+    }, {
       $set: { ...estudiante }
-      })
+    })
     res.send(save);
   } catch (err) {
     res.status(400).json({
@@ -61,7 +52,7 @@ route.post('/add', verifyToken, async (req, res) => {
   }
 })
 
-route.get('/all', verifyToken, async (req, res) => {
+router.get('/all', async (req, res) => {
 
   try {
     let pageNumber = req.query.page ? req.query.page * 1 : 0;
@@ -113,7 +104,7 @@ route.get('/all', verifyToken, async (req, res) => {
   }
 })
 
-route.get('/allNotPaginated', verifyToken, async (req, res) => {
+router.get('/allNotPaginated', async (req, res) => {
   try {
     let query = {}
 
@@ -151,7 +142,7 @@ route.get('/allNotPaginated', verifyToken, async (req, res) => {
   }
 })
 
-route.post('/allByIdSolicitante', verifyToken, async (req, res) => {
+router.post('/allByIdSolicitante', async (req, res) => {
   try {
     let query = {}
     let pageNumber = req.body.page ? req.body.page * 1 : 0;
@@ -159,11 +150,11 @@ route.post('/allByIdSolicitante', verifyToken, async (req, res) => {
     //Datos para los filtros
     let identificacionSolicitante = req.body.identificacionSolicitante;
 
-    query = {identificacionSolicitante:{$eq:identificacionSolicitante}}
+    query = { identificacionSolicitante: { $eq: identificacionSolicitante } }
 
     const homologaciones = await homologacionModel.find(query).skip(pageNumber > 0 ? (pageNumber * paginationSize) : 0)
-    .limit(paginationSize).sort({ fechaCreacion: -1 });
-    
+      .limit(paginationSize).sort({ fechaCreacion: -1 });
+
     const totalHomologaciones = await homologacionModel.count(query);
 
     res.status(200).json({
@@ -181,7 +172,7 @@ route.post('/allByIdSolicitante', verifyToken, async (req, res) => {
   }
 })
 
-route.post('/allByPeriodo', verifyToken, async (req, res) => {
+router.post('/allByPeriodo', async (req, res) => {
   try {
     let query = {}
     let pageNumber = req.body.page ? req.body.page * 1 : 0;
@@ -190,10 +181,10 @@ route.post('/allByPeriodo', verifyToken, async (req, res) => {
     let añoHomologacion = req.body.añoHomologacion;
     let periodo = req.body.periodo;
 
-    query = {añoHomologacion:{$eq:añoHomologacion},periodo:{$eq:periodo}}
+    query = { añoHomologacion: { $eq: añoHomologacion }, periodo: { $eq: periodo } }
     const homologaciones = await homologacionModel.find(query).skip(pageNumber > 0 ? (pageNumber * paginationSize) : 0)
-    .limit(paginationSize).sort({ fechaCreacion: -1 });
-    
+      .limit(paginationSize).sort({ fechaCreacion: -1 });
+
     const totalHomologaciones = await homologacionModel.count(query);
 
     res.status(200).json({
@@ -211,7 +202,7 @@ route.post('/allByPeriodo', verifyToken, async (req, res) => {
   }
 })
 
-route.get('/:id', verifyToken, async (req, res) => {
+router.get('/:id', async (req, res) => {
   const id = req.params.id;
   const homologacion = await homologacionModel.findById(id);
   try {
@@ -221,7 +212,7 @@ route.get('/:id', verifyToken, async (req, res) => {
   }
 })
 
-route.delete('/:id', verifyToken, async (req, res) => {
+router.delete('/:id', async (req, res) => {
   const homologacionId = req.params.id;
   const homologacion = homologacionModel.remove({
     _id: id
@@ -234,24 +225,24 @@ route.delete('/:id', verifyToken, async (req, res) => {
 
 })
 
-route.patch('/:id', verifyToken, async (req, res) => {
+router.patch('/:id', async (req, res) => {
   try {
 
     const estudiante = await estudianteModel.findById(req.body.estudianteId)
 
-    if (!estudiante || !estudiante.estado){
+    if (!estudiante || !estudiante.estado) {
       return res.status(400).json({
         error: "Validación Datos",
         descripcion: 'Estudiante inexxistente o inactivo.'
-    });
+      });
     }
 
     const id = req.params.id;
-    let estado = req.body.estadoHomologacion ? parseInt(req.body.estadoHomologacion):0;
+    let estado = req.body.estadoHomologacion ? parseInt(req.body.estadoHomologacion) : 0;
     const homologacion = {
       programaId: req.body.programaId,
       planId: req.body.planId,
-      asignaturaId:req.body.asignaturaId,
+      asignaturaId: req.body.asignaturaId,
       identificacionSolicitante: req.body.identificacionSolicitante,
       nombreSolicitante: req.body.nombreSolicitante,
       universidadSolicitante: req.body.universidadSolicitante,
@@ -273,9 +264,9 @@ route.patch('/:id', verifyToken, async (req, res) => {
     estudiante.homologacion.push(req.params.id);
     const updateEstudiante = await estudianteModel.updateOne({
       _id: estudiante._id
-      }, {
+    }, {
       $set: { ...estudiante }
-      })
+    })
     res.status(200).json({
       error: false,
       descripcion: "Registro Actualizado Exitosamente",
@@ -287,5 +278,4 @@ route.patch('/:id', verifyToken, async (req, res) => {
 
 })
 
-
-module.exports = route
+module.exports = router

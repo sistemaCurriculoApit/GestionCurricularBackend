@@ -1,14 +1,9 @@
-const express = require("express")
+const router = require("express").Router()
 const planModel = require("../models/plan")
-const route = express.Router()
-const joi = require('@hapi/joi')
-const bcrypt = require('bcrypt')
-const jwt = require('jsonwebtoken')
-const verifyToken = require('./validarToken')
+const verifyToken = require('../util/tokenValidation')
 const { paginationSize } = require('../constants/constants')
 
-
-route.post('/add', verifyToken, async (req, res) => {
+router.post('/add', verifyToken, async (req, res) => {
 
     const planValidar = await planModel.findOne({ codigo: req.body.codigo });
     if (planValidar) return res.status(400).json({
@@ -43,7 +38,8 @@ route.post('/add', verifyToken, async (req, res) => {
     }
 
 })
-route.get('/all', verifyToken, async (req, res) => {
+
+router.get('/all', verifyToken, async (req, res) => {
 
     try {
         let pageNumber = req.query.page ? req.query.page * 1 : 0;
@@ -92,7 +88,7 @@ route.get('/all', verifyToken, async (req, res) => {
     }
 })
 
-route.get('/allNotPaginated', verifyToken, async (req, res) => {
+router.get('/allNotPaginated', verifyToken, async (req, res) => {
     try {
         let query = {}
 
@@ -127,7 +123,7 @@ route.get('/allNotPaginated', verifyToken, async (req, res) => {
     }
 })
 
-route.post('/byListIds', verifyToken, async (req, res) => {
+router.post('/byListIds', verifyToken, async (req, res) => {
     try {
         let query = {}
 
@@ -166,7 +162,7 @@ route.post('/byListIds', verifyToken, async (req, res) => {
     }
 })
 
-route.post('/byListIdsNT', async (req, res) => {
+router.post('/byListIdsNT', async (req, res) => {
     try {
         let query = {}
 
@@ -205,7 +201,7 @@ route.post('/byListIdsNT', async (req, res) => {
     }
 })
 
-route.get('/:id', verifyToken, async (req, res) => {
+router.get('/:id', verifyToken, async (req, res) => {
     const id = req.params.id;
 
     try {
@@ -229,8 +225,7 @@ route.get('/:id', verifyToken, async (req, res) => {
     }
 })
 
-
-route.delete('/:id', verifyToken, async (req, res) => {
+router.delete('/:id', verifyToken, async (req, res) => {
     const id = req.params.id;
 
     try {
@@ -253,8 +248,7 @@ route.delete('/:id', verifyToken, async (req, res) => {
 
 })
 
-
-route.patch('/:id', verifyToken, async (req, res) => {
+router.patch('/:id', verifyToken, async (req, res) => {
 
     try {
         const planValidar = await planModel.findOne({ codigo: req.body.codigo });
@@ -293,4 +287,5 @@ route.patch('/:id', verifyToken, async (req, res) => {
     }
 
 })
-module.exports = route
+
+module.exports = router

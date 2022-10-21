@@ -1,13 +1,10 @@
-const express = require('express')
+const router = require('express').Router()
 const actaModel = require('../models/acta')
-const route = express.Router()
-const jwt = require('jsonwebtoken')
-const verify = require('./validarToken')
-const verifyToken = require('./validarToken')
+
+const verifyToken = require('../util/tokenValidation')
 const { paginationSize } = require('../constants/constants')
 
-
-route.post('/add', verifyToken, async (req, res) => {
+router.post('/add', verifyToken, async (req, res) => {
 
     const acta = new actaModel({
         actividad: req.body.actividad,
@@ -20,7 +17,7 @@ route.post('/add', verifyToken, async (req, res) => {
         fechaActualizacion: new Date(),
         estado: true
     })
-    
+
     try {
         const save = await acta.save()
         res.send(save)
@@ -29,7 +26,8 @@ route.post('/add', verifyToken, async (req, res) => {
     }
 
 })
-route.get('/all', verifyToken, async (req, res) => {
+
+router.get('/all', verifyToken, async (req, res) => {
     let pageNumber = req.query.page ? req.query.page * 1 : 0;
     let query = {}
     try {
@@ -88,41 +86,45 @@ route.get('/all', verifyToken, async (req, res) => {
     }
 })
 
-route.get('/:id', verifyToken, async (req, res) => {
+router.get('/:id', verifyToken, async (req, res) => {
     const id = req.params.id;
     const acta = await actaModel.findById(id);
     try {
         res.status(200).json({
             error: false,
-            descripcion:'La Consulta fue exitosa ',
-            acta:acta})
+            descripcion: 'La Consulta fue exitosa ',
+            acta: acta
+        })
     } catch (error) {
         res.status(400).json({
-            error:true,
-            descripcion:error.message})
+            error: true,
+            descripcion: error.message
+        })
     }
 })
 
-route.delete('/:id', verifyToken, async (req, res) => {
+router.delete('/:id', verifyToken, async (req, res) => {
     const actaId = req.params.id;
-  
+
     try {
         const actaDelete = actaModel.remove({
             _id: id
         })
         res.status(200).json({
-            error:false,
-            descripcion:'Registro eliminado correctamente',
-            acta:actaDelete})
+            error: false,
+            descripcion: 'Registro eliminado correctamente',
+            acta: actaDelete
+        })
     } catch (error) {
         res.status(400).json({
-            error:true,
-            descripcion:error.message})
+            error: true,
+            descripcion: error.message
+        })
     }
 
 })
 
-route.patch('/:id', verifyToken, async (req, res) => {
+router.patch('/:id', verifyToken, async (req, res) => {
     const actaId = req.params.id;
     const acta = {
         actividad: req.body.actividad,
@@ -132,7 +134,7 @@ route.patch('/:id', verifyToken, async (req, res) => {
         conclusion: req.body.conclusion,
         fechaActualizacion: new Date(),
     };
-   
+
     try {
         const update = await actaModel.updateOne({
             _id: actaId
@@ -145,4 +147,5 @@ route.patch('/:id', verifyToken, async (req, res) => {
     }
 
 })
-module.exports = route
+
+module.exports = router

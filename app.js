@@ -1,15 +1,28 @@
-const express= require('express')
-const mongoose= require('mongoose')
-const env= require('dotenv/config')
+const express = require('express')
 const bodyParser = require('body-parser');
+const authRoute = require('./routes/auth')
+const areaRoute = require('./routes/area')
+const asignaturaRoute = require('./routes/asignaturas')
+const advancementsRoute = require('./routes/advancements')
+const contenidoRoute = require('./routes/contenido')
+const estudianteRoute = require('./routes/estudiante')
+const actaRoute = require('./routes/acta')
+const planRoute = require('./routes/plan')
+const dashboardRoute = require('./routes/dashboard')
+const docenteRoute = require('./routes/docente')
+const homologationsRoute = require('./routes/homologations')
+const programaRoute = require('./routes/programa')
+const userRoute = require('./routes/user')
+const verifyToken = require('./util/tokenValidation');
+const router = require('express').Router()
+const connectDB = require('./util/db');
+require('dotenv/config')
 
 const port = process.env.PORT || 3000;
-
 const cors = require('cors');
+const app = express();
 
-
-const app= express();
-app.all(function(req, res, next) {
+app.all(function (req, res, next) {
     res.header("Access-Control-Allow-Origin", '*');
     res.header("Access-Control-Allow-Credentials", true);
     res.header('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS');
@@ -20,54 +33,24 @@ app.all(function(req, res, next) {
 app.use(cors());
 app.use(bodyParser.json());
 
-const userRoute= require('./routes/user')
-app.use('/api/',userRoute)
+router.use('/', userRoute)
+router.use('/auth/', authRoute)
+router.use('/asignatura/', asignaturaRoute)
+router.use('/contenido/', contenidoRoute)
+router.use('/programa/', programaRoute)
+router.use('/acta/', actaRoute)
+router.use('/plan/', planRoute)
+router.use('/dashboard/', dashboardRoute)
+router.use('/docente/', docenteRoute)
+router.use('/area/', areaRoute)
+router.use('/homologations/', verifyToken, homologationsRoute)
+router.use('/advancements/', verifyToken, advancementsRoute)
+router.use('/estudiante/', estudianteRoute)
 
-const authRoute= require('./routes/auth')
-app.use('/api/auth/',authRoute)
+app.use('/api/', router)
 
-const asignaturaRoute= require('./routes/asignaturas')
-app.use('/api/asignatura/',asignaturaRoute) 
-
-const contenidoRoute= require('./routes/contenido')
-app.use('/api/contenido/',contenidoRoute) 
-
-const programaRoute= require('./routes/programa')
-app.use('/api/programa/',programaRoute) 
-
-const actaRoute= require('./routes/acta')
-app.use('/api/acta/',actaRoute) 
-
-const planRoute= require('./routes/plan')
-app.use('/api/plan/',planRoute) 
-
-const dashboardRoute= require('./routes/dashboard')
-app.use('/api/dashboard/',dashboardRoute) 
-
-const docenteRoute= require('./routes/docente')
-app.use('/api/docente/',docenteRoute)
-
-const areaRoute= require('./routes/area')
-app.use('/api/area/',areaRoute) 
-
-const homologacionRoute= require('./routes/homologacion')
-app.use('/api/homologacion/',homologacionRoute) 
-
-const avanceRoute= require('./routes/avance')
-app.use('/api/avance/',avanceRoute) 
-
-const estudianteRoute = require('./routes/estudiante')
-app.use('/api/estudiante/', estudianteRoute)
-
-//Unused route
-// const equivalenciaRoute = require('./routes/equivalencia')
-// app.use('/api/equivalencia/', equivalenciaRoute)
-
-app.listen(port,()=>{
- console.log('server is running '+port)
+app.listen(port, () => {
+    console.log('server is running ' + port)
 })
 
-mongoose.connect(process.env.BD,{useNewUrlParser:true,useUnifiedTopology:true},(err)=>{
-    if(err) return console.log(err)
-    console.log('conexion a bds exitosa')
-})
+connectDB();

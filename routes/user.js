@@ -1,19 +1,12 @@
-const express = require('express')
+const router = require('express').Router()
 const userModel = require('../models/user')
 const estudianteModel = require('../models/estudiante')
-const route = express.Router()
-const joi = require('@hapi/joi')
-const bcrypt = require('bcrypt')
-const jwt = require('jsonwebtoken')
-const verify = require('./validarToken')
-const verifyToken = require('./validarToken')
+const verifyToken = require('../util/tokenValidation')
 const { paginationSize, userProfilesObject } = require('../constants/constants')
 
-var crypto = require('crypto');
-const user = require('../models/user')
-const estudiante = require('../models/estudiante')
+const crypto = require('crypto');
 
-route.get('/home', (req, res) => {
+router.get('/home', (req, res) => {
     res.json({
         body: {
             message: 'api.. probando /home'
@@ -22,22 +15,18 @@ route.get('/home', (req, res) => {
     });
 })
 
-route.get('/user/token', async (req, res) => {
-    const token = jwt.sign({ id: 1212121 }, process.env.SECRET);
-    res.send(token)
-})
-route.post('/user/add', verifyToken, async (req, res) => {
-    
+router.post('/user/add', verifyToken, async (req, res) => {
+
     try {
         const usuarioValidar = await userModel.findOne({ correo: req.body.correo })
         if (usuarioValidar) return res.status(400).json({
             error: "Validación Datos",
             descripcion: 'El Correo ya existe'
         });
-    
-        const estudiante = await estudianteModel.findOne({correo: req.body.correo})
-    
-        if (req.body.rolId === userProfilesObject.est.id && !estudiante){
+
+        const estudiante = await estudianteModel.findOne({ correo: req.body.correo })
+
+        if (req.body.rolId === userProfilesObject.est.id && !estudiante) {
             const estudiante = new estudianteModel({
                 identificacion: req.body.identificacion,
                 nombre: req.body.nombreUsuario,
@@ -47,45 +36,45 @@ route.post('/user/add', verifyToken, async (req, res) => {
                 plan: req.body.plan,
                 programaOrigen: req.body.programaOrigen,
                 planOrigen: req.body.planOrigen,
-                correo : req.body.correo,
+                correo: req.body.correo,
                 fechaActualizacion: new Date(),
                 fechaCreacion: new Date(),
                 estado: true,
             })
-            try{
+            try {
                 const saveEstudiante = await estudiante.save();
             }
-            catch (error){
+            catch (error) {
                 return res.status(500).json({
-                    error:true,
+                    error: true,
                     descripcion: error.message
                 })
             }
-        }else if (req.body.rolId === userProfilesObject.est.id){
-                estudiante.nombre= req.body.nombreUsuario;
-                estudiante.universidad= req.body.universidadEstudiante;
-                estudiante.universidadOrigen = req.body.universidadEstudianteOrigen;
-                estudiante.programa= req.body.programa;
-                estudiante.plan=req.body.plan;
-                estudiante.programaOrigen= req.body.programaOrigen;
-                estudiante.planOrigen=req.body.planOrigen;
-                estudiante.fechaActualizacion= new Date();
-                estudiante.estado = true;
-                try{
-                    const updateEstudiante = await estudianteModel.updateOne({
-                        _id: estudiante._id
-                    }, {
-                        $set: { ...estudiante }
-                    })
-                }
-                catch (error){
-                    return res.status(500).json({
-                        error:true,
-                        descripcion: error.message
-                    })
-                }
+        } else if (req.body.rolId === userProfilesObject.est.id) {
+            estudiante.nombre = req.body.nombreUsuario;
+            estudiante.universidad = req.body.universidadEstudiante;
+            estudiante.universidadOrigen = req.body.universidadEstudianteOrigen;
+            estudiante.programa = req.body.programa;
+            estudiante.plan = req.body.plan;
+            estudiante.programaOrigen = req.body.programaOrigen;
+            estudiante.planOrigen = req.body.planOrigen;
+            estudiante.fechaActualizacion = new Date();
+            estudiante.estado = true;
+            try {
+                const updateEstudiante = await estudianteModel.updateOne({
+                    _id: estudiante._id
+                }, {
+                    $set: { ...estudiante }
+                })
+            }
+            catch (error) {
+                return res.status(500).json({
+                    error: true,
+                    descripcion: error.message
+                })
+            }
         }
-    
+
         var hashPassword = crypto.createHash('md5').update(req.body.contrasena).digest('hex');
         const user = new userModel({
             nombreUsuario: req.body.nombreUsuario,
@@ -96,9 +85,9 @@ route.post('/user/add', verifyToken, async (req, res) => {
             fechaCreacion: new Date(),
             fechaActualizacion: new Date(),
             estado: true
-    
+
         })
-    
+
         const save = await user.save();
         try {
             res.send(save);
@@ -108,15 +97,16 @@ route.post('/user/add', verifyToken, async (req, res) => {
                 error: true,
                 descripcion: error.message
             })
-        }    
-    }catch (error){
+        }
+    } catch (error) {
         return res.status(500).json({
-            error:true,
+            error: true,
             descripcion: error.message
         })
     }
 })
-route.get('/user/all', verifyToken, async (req, res) => {
+
+router.get('/user/all', verifyToken, async (req, res) => {
     try {
         let pageNumber = req.query.page ? req.query.page * 1 : 0;
         let query = {}
@@ -163,7 +153,7 @@ route.get('/user/all', verifyToken, async (req, res) => {
     }
 })
 
-route.get('/user/:id', verifyToken, async (req, res) => {
+router.get('/user/:id', verifyToken, async (req, res) => {
     const id = req.params.id;
     const user = await userModel.findById(id);
     try {
@@ -177,7 +167,7 @@ route.get('/user/:id', verifyToken, async (req, res) => {
     }
 })
 
-route.delete('/user/:id', verifyToken, async (req, res) => {
+router.delete('/user/:id', verifyToken, async (req, res) => {
     const userId = req.params.id;
     const userDelete = userModel.remove({
         _id: id
@@ -194,48 +184,48 @@ route.delete('/user/:id', verifyToken, async (req, res) => {
 
 })
 
-route.patch('/user/:id', verifyToken, async (req, res) => {
+router.patch('/user/:id', verifyToken, async (req, res) => {
 
     const usuarioValidar = await userModel.findOne({ correo: req.body.correo })
     if (!usuarioValidar) return res.status(400).json({
         error: "Validación Datos",
         descripcion: 'El Correo no existe'
     });
-    const estudiante = await estudianteModel.findOne({correo: req.body.correo})
+    const estudiante = await estudianteModel.findOne({ correo: req.body.correo })
 
-    if (req.body.rolId !== userProfilesObject.est.id && estudiante){
+    if (req.body.rolId !== userProfilesObject.est.id && estudiante) {
         estudiante.estado = false
         await estudianteModel.updateOne({
             _id: estudiante._id
         }, {
             $set: { ...estudiante }
         })
-    }else if (req.body.rolId === userProfilesObject.est.id){
-        if (estudiante){
-            estudiante.nombre= req.body.nombreUsuario;
-            estudiante.universidad= req.body.universidadEstudiante;
+    } else if (req.body.rolId === userProfilesObject.est.id) {
+        if (estudiante) {
+            estudiante.nombre = req.body.nombreUsuario;
+            estudiante.universidad = req.body.universidadEstudiante;
             estudiante.identificacion = req.body.identificacion;
             estudiante.universidadOrigen = req.body.universidadEstudianteOrigen
-            estudiante.programa= req.body.programa;
-            estudiante.plan=req.body.plan;
-            estudiante.programaOrigen= req.body.programaOrigen;
-            estudiante.planOrigen=req.body.planOrigen;
+            estudiante.programa = req.body.programa;
+            estudiante.plan = req.body.plan;
+            estudiante.programaOrigen = req.body.programaOrigen;
+            estudiante.planOrigen = req.body.planOrigen;
             estudiante.estado = true;
-            estudiante.fechaActualizacion= new Date();
-            try{
+            estudiante.fechaActualizacion = new Date();
+            try {
                 const updateEstudiante = await estudianteModel.updateOne({
                     _id: estudiante._id
                 }, {
                     $set: { ...estudiante }
                 })
             }
-            catch (error){
+            catch (error) {
                 return res.status(500).json({
-                    error:true,
+                    error: true,
                     descripcion: error.message
                 })
             }
-        }else{
+        } else {
             const estudiante = new estudianteModel({
                 identificacion: req.body.identificacion,
                 nombre: req.body.nombreUsuario,
@@ -245,17 +235,17 @@ route.patch('/user/:id', verifyToken, async (req, res) => {
                 plan: req.body.plan,
                 programaOrigen: req.body.programaOrigen,
                 planOrigen: req.body.planOrigen,
-                correo : req.body.correo,
+                correo: req.body.correo,
                 fechaActualizacion: new Date(),
                 fechaCreacion: new Date(),
                 estado: true,
             })
-            try{
+            try {
                 const saveEstudiante = await estudiante.save();
             }
-            catch (error){
+            catch (error) {
                 return res.status(500).json({
-                    error:true,
+                    error: true,
                     descripcion: error.message
                 })
             }
@@ -263,12 +253,12 @@ route.patch('/user/:id', verifyToken, async (req, res) => {
     }
 
     const userId = req.params.id;
-    if (req.body.contrasena){
+    if (req.body.contrasena) {
         var hashPassword = crypto.createHash('md5').update(req.body.contrasena).digest('hex');
-    }else{
+    } else {
         var hashPassword = usuarioValidar.contrasena
     }
-    
+
 
     const user = {
         nombreUsuario: req.body.nombreUsuario,
@@ -297,4 +287,4 @@ route.patch('/user/:id', verifyToken, async (req, res) => {
 })
 
 
-module.exports = route
+module.exports = router
