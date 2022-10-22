@@ -1,10 +1,10 @@
-const mongoose = require('mongoose')
-const program = require('./programa')
-const plan = require('./plan')
-const area = require('./area')
-const subject = require('./asignatura')
-const professor = require('./docente')
-const content = require('./contenido')
+const mongoose = require('mongoose');
+const program = require('./programa');
+const plan = require('./plan');
+const area = require('./area');
+const subject = require('./asignatura');
+const professor = require('./docente');
+const content = require('./contenido');
 
 const advancement = mongoose.Schema({
   Id: {
@@ -63,5 +63,5 @@ const advancement = mongoose.Schema({
     required: true
   }
 
-})
-module.exports = mongoose.model('Avance', advancement)
+});
+module.exports = mongoose.model('Avance', advancement);

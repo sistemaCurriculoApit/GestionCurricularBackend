@@ -1,7 +1,7 @@
-const mongoose = require('mongoose')
-const program = require('../models/programa')
-const plan = require('../models/plan')
-const subject = require('../models/asignatura')
+const mongoose = require('mongoose');
+const program = require('../models/programa');
+const plan = require('../models/plan');
+const subject = require('../models/asignatura');
 
 const homologacion = mongoose.Schema({
   programaId: {
@@ -32,7 +32,7 @@ const homologacion = mongoose.Schema({
     type: String,
     required: true
   },
-  estadoHomologacion:{
+  estadoHomologacion: {
     type: Number,
     required: true
   },
@@ -51,5 +51,5 @@ const homologacion = mongoose.Schema({
     type: Boolean,
     required: true
   }
-})
-module.exports = mongoose.model('Homologacion', homologacion)
+});
+module.exports = mongoose.model('Homologacion', homologacion);

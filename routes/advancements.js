@@ -1,17 +1,17 @@
-const router = require('express').Router()
-const AdvancementModel = require('../models/advancement')
-const ProfessorModel = require('../models/docente')
-const { paginationSize } = require('../constants/constants')
+const router = require('express').Router();
+const AdvancementModel = require('../models/advancement');
+const ProfessorModel = require('../models/docente');
+const { paginationSize } = require('../constants/constants');
 
 const queryAdvancement = (query, paginated, pageNumber, pageSize = paginationSize) => {
   if (!paginated) {
-    return AdvancementModel.find(query).sort({ fechaCreacion: -1 })
+    return AdvancementModel.find(query).sort({ fechaCreacion: -1 });
   }
 
   return AdvancementModel.find(query)
     .skip(pageNumber * pageSize)
-    .limit(pageSize).sort({ fechaCreacion: -1 })
-}
+    .limit(pageSize).sort({ fechaCreacion: -1 });
+};
 
 router.get('/', async (req, res) => {
   const {
@@ -24,10 +24,10 @@ router.get('/', async (req, res) => {
 
   try {
     const pageNumber = page && page >= 0 ? page : 0;
-    const query = {}
+    const query = {};
 
     if (dateCreationFrom || dateCreationTo) {
-      query.fechaCreacion = {}
+      query.fechaCreacion = {};
 
       if (dateCreationFrom) {
         query.fechaCreacion.$gte = new Date(new Date(dateCreationFrom).toDateString()).toISOString();
@@ -48,41 +48,41 @@ router.get('/', async (req, res) => {
           { universidadSolicitante: regex },
           { programaSolicitante: regex },
           { asignaturaSolicitante: regex },
-        ]
+        ];
       }
     }
 
-    const advancements = await queryAdvancement(query, paginated, pageNumber)
+    const advancements = await queryAdvancement(query, paginated, pageNumber);
 
-    res.status(200).json({ advancements, advancementsCount: advancements.length })
+    res.status(200).json({ advancements, advancementsCount: advancements.length });
   } catch (error) {
     res.status(400).json({
       error: true,
       description: error.message
-    })
+    });
   }
-})
+});
 
 router.get('/professors', async (req, res) => {
-  const { search, dateCreationFrom, dateCreationTo, email: correo, page } = req.query
+  const { search, dateCreationFrom, dateCreationTo, email: correo, page } = req.query;
 
   try {
     const pageNumber = page && page >= 0 ? page : 0;
-    const professor = await ProfessorModel.findOne({ correo })
+    const professor = await ProfessorModel.findOne({ correo });
 
     if (!professor) {
       return res.status(400).json({
-        error: "Wrong data provided",
+        error: 'Wrong data provided',
         description: 'Professor does not exist'
       });
     }
 
     const query = {
       docenteId: professor._id
-    }
+    };
 
     if (dateCreationFrom || dateCreationTo) {
-      query.fechaCreacion = {}
+      query.fechaCreacion = {};
       if (dateCreationFrom) {
         query.fechaCreacion.$gte = new Date(new Date(dateCreationFrom).toDateString()).toISOString();
       }
@@ -95,16 +95,16 @@ router.get('/professors', async (req, res) => {
       query.descripcion = new RegExp(search, 'ig');
     }
 
-    const advancements = await queryAdvancement(query, true, pageNumber)
+    const advancements = await queryAdvancement(query, true, pageNumber);
 
-    res.status(200).json({ advancements, advancementsCount: advancements.length })
+    res.status(200).json({ advancements, advancementsCount: advancements.length });
   } catch (error) {
     res.status(400).json({
       error: true,
       description: error.message
-    })
+    });
   }
-})
+});
 
 router.get('/professors/:id', async (req, res) => {
   const { id: docenteId } = req.params;
@@ -114,26 +114,26 @@ router.get('/professors/:id', async (req, res) => {
     const pageNumber = page && page >= 0 ? page : 0;
     const paginationSizeLocal = pageSize || paginationSize;
 
-    const query = { docenteId }
+    const query = { docenteId };
 
     if (period) {
-      query.periodo = period
+      query.periodo = period;
     }
 
     if (advancementYear) {
-      query["añoAvance"] = new Date(`${advancementYear}-1-1`).toISOString()
+      query['añoAvance'] = new Date(`${advancementYear}-1-1`).toISOString();
     }
 
     const advancements = await queryAdvancement(query, true, pageNumber, paginationSizeLocal);
 
-    res.status(200).json({ advancements, advancementsCount: advancements.length })
+    res.status(200).json({ advancements, advancementsCount: advancements.length });
   } catch (error) {
     res.status(400).json({
       error: true,
       description: error.message
-    })
+    });
   }
-})
+});
 
 router.get('/subjects/:id', async (req, res) => {
   const { id } = req.params;
@@ -141,13 +141,13 @@ router.get('/subjects/:id', async (req, res) => {
 
   try {
     if (!id) {
-      throw new Error('Subject Id was not provided')
+      throw new Error('Subject Id was not provided');
     }
 
     const pageNumber = page && page >= 0 ? page : 0;
     const paginationSizeLocal = ps || paginationSize;
 
-    const query = { asignaturaId: id }
+    const query = { asignaturaId: id };
 
     if (advancementYear) {
       query['añoAvance'] = advancementYear;
@@ -159,56 +159,56 @@ router.get('/subjects/:id', async (req, res) => {
 
     const advancements = await queryAdvancement(query, true, pageNumber, paginationSizeLocal);
 
-    res.status(200).json({ advancements, advancementsCount: advancements.length })
+    res.status(200).json({ advancements, advancementsCount: advancements.length });
   } catch (error) {
     res.status(400).json({
       error: true,
       descripcion: error.message
-    })
+    });
   }
-})
+});
 
 router.get('/periods/:period', async (req, res) => {
-  const { period: periodo } = req.params
-  const { page, advancementYear } = req.query
+  const { period: periodo } = req.params;
+  const { page, advancementYear } = req.query;
 
   try {
     const pageNumber = page && page >= 0 ? page : 0;
 
     if (!periodo) {
-      throw new Error('Period was not provided')
+      throw new Error('Period was not provided');
     }
 
-    const query = { periodo }
+    const query = { periodo };
 
     if (advancementYear) {
-      query["añoAvance"] = new Date(`${advancementYear}-1-1`).toISOString()
+      query['añoAvance'] = new Date(`${advancementYear}-1-1`).toISOString();
     }
 
-    const advancements = await queryAdvancement(query, true, pageNumber)
+    const advancements = await queryAdvancement(query, true, pageNumber);
 
-    res.status(200).json({ advancements, advancementsCount: advancements.length })
+    res.status(200).json({ advancements, advancementsCount: advancements.length });
   } catch (error) {
-    console.log(error)
+    console.log(error);
     res.status(400).json({
       error: true,
       descripcion: error.message
-    })
+    });
   }
-})
+});
 
 router.get('/:id', async (req, res) => {
   const { id } = req.params;
   try {
     const advancement = await AdvancementModel.findById(id);
-    res.status(200).json(advancement)
+    res.status(200).json(advancement);
   } catch (error) {
     res.status(400).json({
       error: true,
       description: error.message
-    })
+    });
   }
-})
+});
 
 router.post('/', async (req, res) => {
   try {
@@ -227,8 +227,8 @@ router.post('/', async (req, res) => {
 
     const advancement = new AdvancementModel({
       programaId: programId,
-      planId: planId,
-      areaId: areaId,
+      planId,
+      areaId,
       asignaturaId: subjectId,
       docenteId: professorId,
       contenido: content,
@@ -249,24 +249,22 @@ router.post('/', async (req, res) => {
       descripcion: err.message
     });
   }
-
-})
+});
 
 router.delete('/:id', async (req, res) => {
   const { id } = req.params;
   try {
-    const homologacion = await AdvancementModel.deleteOne({
+    const advancement = await AdvancementModel.deleteOne({
       _id: id
-    })
-    res.send(homologacion)
+    });
+    res.send(advancement);
   } catch (error) {
     res.status(400).json({
       error: true,
-      descripcion: err.message
+      descripcion: error.message
     });
   }
-
-})
+});
 
 router.put('/:id', async (req, res) => {
   const { id } = req.params;
@@ -281,12 +279,12 @@ router.put('/:id', async (req, res) => {
     period,
     advancementPercentage,
     description,
-  } = req.body
+  } = req.body;
 
   const advancement = {
     programaId: programId,
-    planId: planId,
-    areaId: areaId,
+    planId,
+    areaId,
     asignaturaId: subjectId,
     docenteId: professorId,
     contenido: content,
@@ -302,10 +300,10 @@ router.put('/:id', async (req, res) => {
     }, {
       $set: advancement
     });
-    res.status(200).json(update)
+    res.status(200).json(update);
   } catch (error) {
-    res.send(error.message)
+    res.send(error.message);
   }
-})
+});
 
-module.exports = router
+module.exports = router;
