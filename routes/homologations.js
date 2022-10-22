@@ -1,68 +1,24 @@
 const router = require('express').Router()
-const homologacionModel = require('../models/homologacion')
-const estudianteModel = require('../models/estudiante')
+const HomologationModel = require('../models/homologation')
+const StudentModel = require('../models/estudiante')
 const { paginationSize } = require('../constants/constants')
 
-router.post('/add', async (req, res) => {
-  try {
-
-    const estudiante = await estudianteModel.findById(req.body.estudianteId)
-
-    if (!estudiante || !estudiante.estado) {
-      return res.status(400).json({
-        error: "Validación Datos",
-        descripcion: 'Estudiante inexistente o inactivo.'
-      });
-    }
-
-    let estado = req.body.estadoHomologacion ? parseInt(req.body.estadoHomologacion) : 0;
-
-    const homologacion = new homologacionModel({
-      programaId: req.body.programaId,
-      planId: req.body.planId,
-      asignaturaId: req.body.asignaturaId,
-      identificacionSolicitante: req.body.identificacionSolicitante,
-      nombreSolicitante: req.body.nombreSolicitante,
-      universidadSolicitante: req.body.universidadSolicitante,
-      programaSolicitante: req.body.programaSolicitante,
-      asignaturaSolicitante: req.body.asignaturaSolicitante,
-      añoHomologacion: req.body.añoHomologacion,
-      periodo: req.body.periodo,
-      estadoHomologacion: estado,
-      fechaDecision: estado !== 2 ? req.body.fechaDecision : null,
-      descripcion: req.body.descripcion,
-      fechaActualizacion: new Date(),
-      fechaCreacion: new Date(),
-      estado: true,
-    })
-
-    const save = await homologacion.save();
-    estudiante.homologacion.push(save);
-    const updateEstudiante = await estudianteModel.updateOne({
-      _id: estudiante._id
-    }, {
-      $set: { ...estudiante }
-    })
-    res.send(save);
-  } catch (err) {
-    res.status(400).json({
-      error: true,
-      descripcion: err.message
-    });
+const queryHomologations = (query, paginated, pageNumber, pageSize = paginationSize) => {
+  if (!paginated) {
+    return HomologationModel.find(query).sort({ fechaCreacion: -1 })
   }
-})
 
-router.get('/all', async (req, res) => {
+  return HomologationModel.find(query)
+    .skip(pageNumber * pageSize)
+    .limit(pageSize).sort({ fechaCreacion: -1 })
+}
+
+router.get('/', async (req, res) => {
+  const { page, search, dateCreationFrom, dateCreationTo, paginated } = req.query
 
   try {
-    let pageNumber = req.query.page ? req.query.page * 1 : 0;
-    let query = {}
-
-    //Datos para los filtros
-    let search = req.query.search;
-    let dateCreationFrom = req.query.dateCreationFrom;
-    let dateCreationTo = req.query.dateCreationTo;
-
+    const pageNumber = page && page >= 0 ? page : 0;
+    const query = {}
 
     if (dateCreationFrom || dateCreationTo) {
       query.fechaCreacion = {}
@@ -75,27 +31,134 @@ router.get('/all', async (req, res) => {
     }
 
     if (search) {
-      var regex = new RegExp(search, 'ig');
-      const or = {
-        $or: [
-          { 'identificacion': regex },
-          { 'nombre': regex },
-          { 'universidad': regex },
-          { 'programa': regex }
-        ]
-      }
-      query = {
-        $and: [query, or],
-      };
+      const regex = new RegExp(search, 'ig');
+      query.$or = [
+        { 'identificacion': regex },
+        { 'nombre': regex },
+        { 'universidad': regex },
+        { 'programa': regex }
+      ]
     }
 
-    const homologaciones = await homologacionModel.find(query)
-      .skip(pageNumber > 0 ? (pageNumber * paginationSize) : 0)
-      .limit(paginationSize).sort({ fechaCreacion: -1 });
+    const homologations = await queryHomologations(query, paginated, pageNumber);
+
+    res.status(200).json({ homologations, homologationsCount: homologations.length })
+  } catch (error) {
+    res.status(400).json({
+      error: true,
+      description: error.message
+    })
+  }
+})
+
+router.post('/', async (req, res) => {
+  const {
+    programId,
+    planId,
+    subjectId,
+    studentId,
+    applicantName,
+    applicantCollege,
+    applicantProgram,
+    applicantSubject,
+    homologationYear,
+    period,
+    homologationStatus,
+    desitionDate,
+    description,
+  } = req.body
+
+  try {
+    const student = await StudentModel.findOne({ identificacion: studentId, estado: true })
+
+    if (!student) {
+      return res.status(400).json({
+        error: "Validación Datos",
+        descripcion: 'Estudiante inexistente o inactivo.'
+      });
+    }
 
 
-    const totalHomologaciones = await homologacionModel.count(query);
-    res.send({ homologaciones, totalHomologaciones })
+    const status = homologationStatus ? parseInt(homologationStatus) : 0;
+
+    const homologation = new HomologationModel({
+      programaId: programId,
+      planId: planId,
+      asignaturaId: subjectId,
+      identificacionSolicitante: studentId,
+      nombreSolicitante: applicantName,
+      universidadSolicitante: applicantCollege,
+      programaSolicitante: applicantProgram,
+      asignaturaSolicitante: applicantSubject,
+      añoHomologacion: homologationYear,
+      periodo: period,
+      estadoHomologacion: status,
+      fechaDecision: status !== 2 ? desitionDate : null,
+      descripcion: description,
+      fechaActualizacion: new Date(),
+      fechaCreacion: new Date(),
+      estado: true,
+    })
+
+    const save = await homologation.save();
+    student.homologacion.push(save);
+
+    await StudentModel.updateOne({
+      _id: student._id
+    }, {
+      $set: { ...student }
+    })
+
+    res.status(201).json(save);
+  } catch (err) {
+    res.status(400).json({
+      error: true,
+      descripcion: err.message
+    });
+  }
+})
+
+router.get('/applicants/:id', async (req, res) => {
+  const { page } = req.query
+  const { id } = req.params;
+  try {
+    if (!id) {
+      throw new Error('No applicant Id was provided')
+    }
+
+    const pageNumber = page && page >= 0 ? page : 0;
+    const query = { identificacionSolicitante: id }
+
+    const homologations = await queryHomologations(query, true, pageNumber)
+
+    res.status(200).json({ homologations, homologationsCount: homologations.length })
+  } catch (error) {
+    res.status(400).json({
+      error: true,
+      description: error.message
+    })
+  }
+})
+
+router.get('/periods/:period', async (req, res) => {
+  const { page, homologacionYear } = req.query
+  const { period: periodo } = req.params
+
+  try {
+    if (!periodo) {
+      throw new Error('No period was provided');
+    }
+
+    const query = { periodo }
+    const pageNumber = page && page >= 0 ? page : 0;
+
+    if (homologacionYear) {
+      query['añoHomologacion'] = homologacionYear
+    }
+
+    const homologations = await queryHomologations(query, true, pageNumber)
+
+    res.status(200).json({ homologations, homologationsCount: homologations.length })
   } catch (error) {
     res.status(400).json({
       error: true,
@@ -104,176 +167,106 @@ router.get('/all', async (req, res) => {
   }
 })
 
-router.get('/allNotPaginated', async (req, res) => {
-  try {
-    let query = {}
-
-    //Datos para los filtros
-    let search = req.query.search;
-
-    if (search) {
-      var regex = new RegExp(search, 'ig');
-      const or = {
-        $or: [
-          { 'identificacionSolicitante': regex },
-          { 'nombreSolicitante': regex },
-          { 'universidadSolicitante': regex },
-          { 'programaSolicitante': regex },
-          { 'asignaturaSolicitante': regex },
-        ]
-      }
-      query = {
-        $and: [query, or],
-      };
-    }
-
-    const homologaciones = await homologacionModel.find(query);
-    res.status(200).json({
-      error: false,
-      descripcion: "Consulta Exitosa",
-      homologaciones
-    })
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({
-      error: true,
-      descripcion: error.message
-    })
-  }
-})
-
-router.post('/allByIdSolicitante', async (req, res) => {
-  try {
-    let query = {}
-    let pageNumber = req.body.page ? req.body.page * 1 : 0;
-
-    //Datos para los filtros
-    let identificacionSolicitante = req.body.identificacionSolicitante;
-
-    query = { identificacionSolicitante: { $eq: identificacionSolicitante } }
-
-    const homologaciones = await homologacionModel.find(query).skip(pageNumber > 0 ? (pageNumber * paginationSize) : 0)
-      .limit(paginationSize).sort({ fechaCreacion: -1 });
-
-    const totalHomologaciones = await homologacionModel.count(query);
-
-    res.status(200).json({
-      error: false,
-      descripcion: "Consulta Exitosa",
-      homologaciones,
-      totalHomologaciones
-    })
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({
-      error: true,
-      descripcion: error.message
-    })
-  }
-})
-
-router.post('/allByPeriodo', async (req, res) => {
-  try {
-    let query = {}
-    let pageNumber = req.body.page ? req.body.page * 1 : 0;
-
-    //Datos para los filtros
-    let añoHomologacion = req.body.añoHomologacion;
-    let periodo = req.body.periodo;
-
-    query = { añoHomologacion: { $eq: añoHomologacion }, periodo: { $eq: periodo } }
-    const homologaciones = await homologacionModel.find(query).skip(pageNumber > 0 ? (pageNumber * paginationSize) : 0)
-      .limit(paginationSize).sort({ fechaCreacion: -1 });
-
-    const totalHomologaciones = await homologacionModel.count(query);
-
-    res.status(200).json({
-      error: false,
-      descripcion: "Consulta Exitosa",
-      homologaciones,
-      totalHomologaciones
-    })
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({
-      error: true,
-      descripcion: error.message
-    })
-  }
-})
-
 router.get('/:id', async (req, res) => {
-  const id = req.params.id;
-  const homologacion = await homologacionModel.findById(id);
+  const { id } = req.params;
   try {
-    res.send(homologacion)
+    const homologation = await HomologationModel.findById(id);
+    res.status(200).json(homologation)
   } catch (error) {
-    res.send(error.message)
+    res.status(400).json({
+      error: true,
+      descripcion: error.message
+    })
   }
 })
 
 router.delete('/:id', async (req, res) => {
-  const homologacionId = req.params.id;
-  const homologacion = homologacionModel.remove({
-    _id: id
-  })
+  const { id } = req.params;
   try {
-    res.send(homologacion)
+    const homologation = await HomologationModel.deleteOne({
+      _id: id
+    })
+    res.status(200).json(homologation)
   } catch (error) {
-    res.send(error.message)
+    res.status(400).json({
+      error: true,
+      descripcion: error.message
+    })
   }
 
 })
 
-router.patch('/:id', async (req, res) => {
+router.put('/:id', async (req, res) => {
+  const {
+    programId,
+    planId,
+    subjectId,
+    studentId,
+    applicantName,
+    applicantCollege,
+    applicantProgram,
+    applicantSubject,
+    homologationYear,
+    period,
+    homologationStatus,
+    desitionDate,
+    description,
+  } = req.body
+
+  const { id } = req.params
+
   try {
+    const student = await StudentModel.findOne({ identificacion: studentId, estado: true })
 
-    const estudiante = await estudianteModel.findById(req.body.estudianteId)
-
-    if (!estudiante || !estudiante.estado) {
+    if (!student) {
       return res.status(400).json({
         error: "Validación Datos",
         descripcion: 'Estudiante inexxistente o inactivo.'
       });
     }
 
-    const id = req.params.id;
-    let estado = req.body.estadoHomologacion ? parseInt(req.body.estadoHomologacion) : 0;
-    const homologacion = {
-      programaId: req.body.programaId,
-      planId: req.body.planId,
-      asignaturaId: req.body.asignaturaId,
-      identificacionSolicitante: req.body.identificacionSolicitante,
-      nombreSolicitante: req.body.nombreSolicitante,
-      universidadSolicitante: req.body.universidadSolicitante,
-      programaSolicitante: req.body.programaSolicitante,
-      asignaturaSolicitante: req.body.asignaturaSolicitante,
-      añoHomologacion: req.body.añoHomologacion,
-      periodo: req.body.periodo,
-      estadoHomologacion: estado,
-      fechaDecision: estado !== 2 ? req.body.fechaDecision : null,
-      descripcion: req.body.descripcion,
+    const status = homologationStatus ? parseInt(homologationStatus) : 0;
+
+    const homologation = {
+      programaId: programId,
+      planId: planId,
+      asignaturaId: subjectId,
+      identificacionSolicitante: studentId,
+      nombreSolicitante: applicantName,
+      universidadSolicitante: applicantCollege,
+      programaSolicitante: applicantProgram,
+      asignaturaSolicitante: applicantSubject,
+      añoHomologacion: homologationYear,
+      periodo: period,
+      estadoHomologacion: status,
+      fechaDecision: status !== 2 ? desitionDate : null,
+      descripcion: description,
       fechaActualizacion: new Date(),
-    };
-    const update = await homologacionModel.updateOne({
+      fechaCreacion: new Date(),
+      estado: true,
+    }
+
+    const update = await HomologationModel.updateOne({
       _id: id
     }, {
-      $set: homologacion
+      $set: homologation
     });
 
-    estudiante.homologacion.push(req.params.id);
-    const updateEstudiante = await estudianteModel.updateOne({
-      _id: estudiante._id
+    student.homologacion.push(id);
+
+    await StudentModel.updateOne({
+      _id: student._id
     }, {
-      $set: { ...estudiante }
+      $set: { ...student }
     })
     res.status(200).json({
-      error: false,
-      descripcion: "Registro Actualizado Exitosamente",
       homologacion: update
     })
   } catch (error) {
-    res.send(error.message)
+    res.status(400).json({
+      error: true,
+      descripcion: error.message
+    });
   }
 
 })

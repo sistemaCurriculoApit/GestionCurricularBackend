@@ -1,18 +1,34 @@
 const router = require('express').Router()
-const avanceModel = require('../models/avance')
-const docenteModel = require('../models/docente')
+const AdvancementModel = require('../models/advancement')
+const ProfessorModel = require('../models/docente')
 const { paginationSize } = require('../constants/constants')
 
+const queryAdvancement = (query, paginated, pageNumber, pageSize = paginationSize) => {
+  if (!paginated) {
+    return AdvancementModel.find(query).sort({ fechaCreacion: -1 })
+  }
+
+  return AdvancementModel.find(query)
+    .skip(pageNumber * pageSize)
+    .limit(pageSize).sort({ fechaCreacion: -1 })
+}
+
 router.get('/', async (req, res) => {
+  const {
+    search,
+    dateCreationFrom,
+    dateCreationTo,
+    page,
+    paginated
+  } = req.query;
+
   try {
-    const pageNumber = req.query.page || 0;
-    const search = req.query.search;
-    const dateCreationFrom = req.query.dateCreationFrom;
-    const dateCreationTo = req.query.dateCreationTo;
+    const pageNumber = page && page >= 0 ? page : 0;
     const query = {}
 
     if (dateCreationFrom || dateCreationTo) {
       query.fechaCreacion = {}
+
       if (dateCreationFrom) {
         query.fechaCreacion.$gte = new Date(new Date(dateCreationFrom).toDateString()).toISOString();
       }
@@ -23,22 +39,22 @@ router.get('/', async (req, res) => {
 
     if (search) {
       const regex = new RegExp(search, 'ig');
-      const or = {
-        $or: [
-          { 'descripcion': regex },
+      if (paginated) {
+        query.descripcion = regex;
+      } else {
+        query.$or = [
+          { identificacionSolicitante: regex },
+          { nombreSolicitante: regex },
+          { universidadSolicitante: regex },
+          { programaSolicitante: regex },
+          { asignaturaSolicitante: regex },
         ]
       }
-      query['$and'] = [query, or];
     }
 
-    const advancementsPromise = avanceModel.find(query)
-      .skip(pageNumber > 0 ? (pageNumber * paginationSize) : 0)
-      .limit(paginationSize).sort({ fechaCreacion: -1 });
+    const advancements = await queryAdvancement(query, paginated, pageNumber)
 
-    const advancementsCountPromise = avanceModel.count(query);
-
-    const [advancements, advancementsCount] = await Promise.all([advancementsPromise, advancementsCountPromise])
-    res.status(200).json({ advancements, advancementsCount })
+    res.status(200).json({ advancements, advancementsCount: advancements.length })
   } catch (error) {
     res.status(400).json({
       error: true,
@@ -47,18 +63,22 @@ router.get('/', async (req, res) => {
   }
 })
 
-router.get('/professor', async (req, res) => {
+router.get('/professors', async (req, res) => {
+  const { search, dateCreationFrom, dateCreationTo, email: correo, page } = req.query
+
   try {
-    const pageNumber = req.query.page || 0;
-    const { search, dateCreationFrom, dateCreationTo, email: correo } = req.query
-    const professor = await docenteModel.findOne({ correo })
-    let query = {}
+    const pageNumber = page && page >= 0 ? page : 0;
+    const professor = await ProfessorModel.findOne({ correo })
 
     if (!professor) {
       return res.status(400).json({
         error: "Wrong data provided",
         description: 'Professor does not exist'
       });
+    }
+
+    const query = {
+      docenteId: professor._id
     }
 
     if (dateCreationFrom || dateCreationTo) {
@@ -72,31 +92,12 @@ router.get('/professor', async (req, res) => {
     }
 
     if (search) {
-      var regex = new RegExp(search, 'ig');
-      const or = {
-        $or: [
-          { 'descripcion': regex },
-        ]
-      }
-      query = {
-        $and: [query, or],
-        $and: [{ 'docenteId': professor._id }]
-      };
-    } else {
-      query = {
-        $and: [{ 'docenteId': professor._id }]
-      };
+      query.descripcion = new RegExp(search, 'ig');
     }
 
+    const advancements = await queryAdvancement(query, true, pageNumber)
 
-    const advancementsPromise = avanceModel.find(query)
-      .skip(pageNumber > 0 ? (pageNumber * paginationSize) : 0)
-      .limit(paginationSize).sort({ fechaCreacion: -1 });
-
-    const advancementsCountPromise = avanceModel.count(query);
-
-    const [advancements, advancementsCount] = await Promise.all([advancementsPromise, advancementsCountPromise])
-    res.status(200).json({ advancements, advancementsCount })
+    res.status(200).json({ advancements, advancementsCount: advancements.length })
   } catch (error) {
     res.status(400).json({
       error: true,
@@ -105,25 +106,27 @@ router.get('/professor', async (req, res) => {
   }
 })
 
-router.get('/professor/:id', async (req, res) => {
+router.get('/professors/:id', async (req, res) => {
+  const { id: docenteId } = req.params;
+  const { advancementYear, period, page, pageSize } = req.query;
+
   try {
-    let query = {}
-    const { id } = req.params;
-    const { advancementYear, period, page, pageSize } = req.query;
-    const pageNumber = page || 0;
+    const pageNumber = page && page >= 0 ? page : 0;
     const paginationSizeLocal = pageSize || paginationSize;
-    const year = new Date(`${advancementYear}-1-1`).toISOString()
 
-    query = { añoAvance: { $eq: year }, periodo: { $eq: period }, docenteId: { $eq: id } }
+    const query = { docenteId }
 
-    const advancementsPromise = avanceModel.find(query)
-      .skip(pageNumber > 0 ? (pageNumber * paginationSize) : 0)
-      .limit(paginationSizeLocal).sort({ fechaCreacion: -1 });
+    if (period) {
+      query.periodo = period
+    }
 
-    const advancementsCountPromise = avanceModel.count(query);
+    if (advancementYear) {
+      query["añoAvance"] = new Date(`${advancementYear}-1-1`).toISOString()
+    }
 
-    const [advancements, advancementsCount] = await Promise.all([advancementsPromise, advancementsCountPromise])
-    res.status(200).json({ advancements, advancementsCount })
+    const advancements = await queryAdvancement(query, true, pageNumber, paginationSizeLocal);
+
+    res.status(200).json({ advancements, advancementsCount: advancements.length })
   } catch (error) {
     res.status(400).json({
       error: true,
@@ -132,27 +135,115 @@ router.get('/professor/:id', async (req, res) => {
   }
 })
 
-router.post('/add', async (req, res) => {
+router.get('/subjects/:id', async (req, res) => {
+  const { id } = req.params;
+  const { advancementYear, period, page, paginationSize: ps } = req.query;
+
   try {
-    const avance = new avanceModel({
-      programaId: req.body.programaId,
-      planId: req.body.planId,
-      areaId: req.body.areaId,
-      asignaturaId: req.body.asignaturaId,
-      docenteId: req.body.docenteId,
-      contenido: req.body.contenido,
-      añoAvance: req.body.añoAvance,
-      periodo: req.body.periodo,
-      porcentajeAvance: req.body.porcentajeAvance,
-      descripcion: req.body.descripcion,
+    if (!id) {
+      throw new Error('Subject Id was not provided')
+    }
+
+    const pageNumber = page && page >= 0 ? page : 0;
+    const paginationSizeLocal = ps || paginationSize;
+
+    const query = { asignaturaId: id }
+
+    if (advancementYear) {
+      query['añoAvance'] = advancementYear;
+    }
+
+    if (period) {
+      query.periodo = period;
+    }
+
+    const advancements = await queryAdvancement(query, true, pageNumber, paginationSizeLocal);
+
+    res.status(200).json({ advancements, advancementsCount: advancements.length })
+  } catch (error) {
+    res.status(400).json({
+      error: true,
+      descripcion: error.message
+    })
+  }
+})
+
+router.get('/periods/:period', async (req, res) => {
+  const { period: periodo } = req.params
+  const { page, advancementYear } = req.query
+
+  try {
+    const pageNumber = page && page >= 0 ? page : 0;
+
+    if (!periodo) {
+      throw new Error('Period was not provided')
+    }
+
+    const query = { periodo }
+
+    if (advancementYear) {
+      query["añoAvance"] = new Date(`${advancementYear}-1-1`).toISOString()
+    }
+
+    const advancements = await queryAdvancement(query, true, pageNumber)
+
+    res.status(200).json({ advancements, advancementsCount: advancements.length })
+  } catch (error) {
+    console.log(error)
+    res.status(400).json({
+      error: true,
+      descripcion: error.message
+    })
+  }
+})
+
+router.get('/:id', async (req, res) => {
+  const { id } = req.params;
+  try {
+    const advancement = await AdvancementModel.findById(id);
+    res.status(200).json(advancement)
+  } catch (error) {
+    res.status(400).json({
+      error: true,
+      description: error.message
+    })
+  }
+})
+
+router.post('/', async (req, res) => {
+  try {
+    const {
+      programId,
+      planId,
+      areaId,
+      subjectId,
+      professorId,
+      content,
+      advicementYear,
+      period,
+      advancementPercentage,
+      description,
+    } = req.body;
+
+    const advancement = new AdvancementModel({
+      programaId: programId,
+      planId: planId,
+      areaId: areaId,
+      asignaturaId: subjectId,
+      docenteId: professorId,
+      contenido: content,
+      añoAvance: advicementYear,
+      periodo: period,
+      porcentajeAvance: advancementPercentage,
+      descripcion: description,
       fechaActualizacion: new Date(),
       fechaCreacion: new Date(),
       estado: true,
-    })
-    const save = await avance.save();
-    res.send(save);
+    });
+
+    const save = await advancement.save();
+    res.status(200).json(save);
   } catch (err) {
-    console.error(err);
     res.status(400).json({
       error: true,
       descripcion: err.message
@@ -161,162 +252,60 @@ router.post('/add', async (req, res) => {
 
 })
 
-router.get('/allNotPaginated', async (req, res) => {
-  try {
-    let query = {}
-
-    //Datos para los filtros
-    let search = req.query.search;
-
-    if (search) {
-      var regex = new RegExp(search, 'ig');
-      const or = {
-        $or: [
-          { 'identificacionSolicitante': regex },
-          { 'nombreSolicitante': regex },
-          { 'universidadSolicitante': regex },
-          { 'programaSolicitante': regex },
-          { 'asignaturaSolicitante': regex },
-        ]
-      }
-      query = {
-        $and: [query, or],
-      };
-    }
-
-    const avances = await avanceModel.find(query);
-    res.status(200).json({
-      error: false,
-      descripcion: "Consulta Exitosa",
-      avances
-    })
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({
-      error: true,
-      descripcion: error.message
-    })
-  }
-})
-
-router.post('/allByAsignatura', async (req, res) => {
-  try {
-    let query = {}
-    let pageNumber = req.body.page ? req.body.page * 1 : 0;
-    let paginationSizeLocal = req.body.paginationSize || paginationSize;
-
-
-    //Datos para los filtros
-    let añoAvance = req.body.añoAvance;
-    let periodo = req.body.periodo;
-    let asignaturaId = req.body.asignaturaId;
-
-    query = { añoAvance: { $eq: añoAvance }, periodo: { $eq: periodo }, asignaturaId: { $eq: asignaturaId } }
-
-    const avances = await avanceModel.find(query).skip(pageNumber > 0 ? (pageNumber * paginationSizeLocal) : 0)
-      .limit(paginationSizeLocal).sort({ fechaCreacion: -1 });
-
-    const totalAvances = await avanceModel.count(query);
-
-    res.status(200).json({
-      error: false,
-      descripcion: "Consulta Exitosa",
-      avances,
-      totalAvances
-    })
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({
-      error: true,
-      descripcion: error.message
-    })
-  }
-})
-
-router.post('/allByPeriodo', async (req, res) => {
-  try {
-    let query = {}
-    let pageNumber = req.body.page ? req.body.page * 1 : 0;
-
-    //Datos para los filtros
-    let añoAvance = req.body.añoAvance;
-    let periodo = req.body.periodo;
-
-    query = { añoAvance: { $eq: añoAvance }, periodo: { $eq: periodo } }
-
-    const avances = await avanceModel.find(query).skip(pageNumber > 0 ? (pageNumber * paginationSize) : 0)
-      .limit(paginationSize).sort({ fechaCreacion: -1 });
-
-    const totalAvances = await avanceModel.count(query);
-
-    res.status(200).json({
-      error: false,
-      descripcion: "Consulta Exitosa",
-      avances,
-      totalAvances
-    })
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({
-      error: true,
-      descripcion: error.message
-    })
-  }
-})
-
-router.get('/:id', async (req, res) => {
-  const id = req.params.id;
-  const homologacion = await avanceModel.findById(id);
-  try {
-    res.send(homologacion)
-  } catch (error) {
-    res.send(error.message)
-  }
-})
-
 router.delete('/:id', async (req, res) => {
-  const homologacionId = req.params.id;
-  const homologacion = avanceModel.remove({
-    _id: id
-  })
+  const { id } = req.params;
   try {
+    const homologacion = await AdvancementModel.deleteOne({
+      _id: id
+    })
     res.send(homologacion)
   } catch (error) {
-    res.send(error.message)
+    res.status(400).json({
+      error: true,
+      descripcion: err.message
+    });
   }
 
 })
 
-router.patch('/:id', async (req, res) => {
+router.put('/:id', async (req, res) => {
+  const { id } = req.params;
+  const {
+    programId,
+    planId,
+    areaId,
+    subjectId,
+    professorId,
+    content,
+    advicementYear,
+    period,
+    advancementPercentage,
+    description,
+  } = req.body
+
+  const advancement = {
+    programaId: programId,
+    planId: planId,
+    areaId: areaId,
+    asignaturaId: subjectId,
+    docenteId: professorId,
+    contenido: content,
+    añoAvance: advicementYear,
+    periodo: period,
+    porcentajeAvance: advancementPercentage,
+    descripcion: description,
+    fechaActualizacion: new Date(),
+  };
   try {
-    const id = req.params.id;
-    const homologacion = {
-      programaId: req.body.programaId,
-      planId: req.body.planId,
-      areaId: req.body.areaId,
-      asignaturaId: req.body.asignaturaId,
-      docenteId: req.body.docenteId,
-      contenido: req.body.contenido,
-      añoAvance: req.body.añoAvance,
-      periodo: req.body.periodo,
-      porcentajeAvance: req.body.porcentajeAvance,
-      descripcion: req.body.descripcion,
-      fechaActualizacion: new Date(),
-    };
-    const update = await avanceModel.updateOne({
+    const update = await AdvancementModel.updateOne({
       _id: id
     }, {
-      $set: homologacion
+      $set: advancement
     });
-    res.status(200).json({
-      error: false,
-      descripcion: "Registro Actualizado Exitosamente",
-      homologacion: update
-    })
+    res.status(200).json(update)
   } catch (error) {
     res.send(error.message)
   }
-
 })
 
 module.exports = router

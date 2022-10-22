@@ -1,12 +1,12 @@
 const mongoose = require('mongoose')
-const programa = require('../models/programa')
+const program = require('../models/programa')
 const plan = require('../models/plan')
-const asignatura = require('../models/asignatura')
+const subject = require('../models/asignatura')
 
 const homologacion = mongoose.Schema({
   programaId: {
     type: mongoose.Schema.ObjectId,
-    ref: programa
+    ref: program
   },
   planId: {
     type: mongoose.Schema.ObjectId,
@@ -14,7 +14,7 @@ const homologacion = mongoose.Schema({
   },
   asignaturaId: {
     type: mongoose.Schema.ObjectId,
-    ref: asignatura
+    ref: subject
   },
   asignaturaSolicitante: {
     type: String,

@@ -1,15 +1,15 @@
 const mongoose = require('mongoose')
-const programa = require('./programa')
+const program = require('./programa')
 const plan = require('./plan')
 const area = require('./area')
-const asignatura = require('./asignatura')
-const docente = require('./docente')
-const contenido = require('./contenido')
+const subject = require('./asignatura')
+const professor = require('./docente')
+const content = require('./contenido')
 
-const avance = mongoose.Schema({
-  programaId: {
+const advancement = mongoose.Schema({
+  Id: {
     type: mongoose.Schema.ObjectId,
-    ref: programa
+    ref: program
   },
   planId: {
     type: mongoose.Schema.ObjectId,
@@ -21,17 +21,17 @@ const avance = mongoose.Schema({
   },
   asignaturaId: {
     type: mongoose.Schema.ObjectId,
-    ref: asignatura
+    ref: subject
   },
   docenteId: {
     type: mongoose.Schema.ObjectId,
-    ref: docente
+    ref: professor
   },
   contenido: [
     {
       _id: {
         type: mongoose.Schema.ObjectId,
-        ref: contenido
+        ref: content
       }
     }
   ],
@@ -64,4 +64,4 @@ const avance = mongoose.Schema({
   }
 
 })
-module.exports = mongoose.model('Avance', avance)
+module.exports = mongoose.model('Avance', advancement)

@@ -1,8 +1,8 @@
 const actaModel = require('../models/acta')
 const userModel = require('../models/user')
 const docenteModel = require('../models/docente')
-const homologacion = require('../models/homologacion')
-const avance = require('../models/avance')
+const homologacion = require('../models/homologation')
+const avance = require('../models/advancement')
 const router = require('express').Router()
 const verifyToken = require('../util/tokenValidation')
 

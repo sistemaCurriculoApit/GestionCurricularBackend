@@ -1,59 +1,58 @@
-const mongoose=require('mongoose')
-const programa= require('../models/programa')
-const homologacion = require('../models/homologacion')
-const user= require('../models/user')
+const mongoose = require('mongoose')
+const programa = require('../models/programa')
+const homologacion = require('../models/homologation')
+const user = require('../models/user')
 
-const estudiante=mongoose.Schema({
-    
-    identificacion:{
-        type:String,
-        required:true
+const estudiante = mongoose.Schema({
+    identificacion: {
+        type: String,
+        required: true
     },
-    nombre:{
-        type:String,
-        required:true
+    nombre: {
+        type: String,
+        required: true
     },
-    universidad:{
-        type:String,
+    universidad: {
+        type: String,
     },
-    universidadOrigen:{
-        type:String,
-        required:true
+    universidadOrigen: {
+        type: String,
+        required: true
     },
-    programa:{
-       type:String,
+    programa: {
+        type: String,
     },
-    plan:{
-        type:String,
+    plan: {
+        type: String,
     },
-    programaOrigen:{
-        type:String,
-        required:true
-     },
-     planOrigen:{
-         type:String,
-         required:true
-     },
-    homologacion:[{
-        _id:{
-            type:mongoose.Schema.ObjectId,
-            ref:homologacion
+    programaOrigen: {
+        type: String,
+        required: true
+    },
+    planOrigen: {
+        type: String,
+        required: true
+    },
+    homologacion: [{
+        _id: {
+            type: mongoose.Schema.ObjectId,
+            ref: homologacion
         }
     }],
-    correo:{
-        type:String,
-        required:true
+    correo: {
+        type: String,
+        required: true
     },
-    fechaCreacion:{
-        type:Date,
-        
+    fechaCreacion: {
+        type: Date,
+
     },
-    fechaActualizacion:{
-        type:Date,
+    fechaActualizacion: {
+        type: Date,
     },
-    estado:{
-        type:Boolean,
-        required:true
+    estado: {
+        type: Boolean,
+        required: true
     }
 })
-module.exports=mongoose.model('Estudiante',estudiante)
+module.exports = mongoose.model('Estudiante', estudiante)
