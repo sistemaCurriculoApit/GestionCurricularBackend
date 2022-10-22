@@ -150,7 +150,7 @@ router.get('/subjects/:id', async (req, res) => {
     const query = { asignaturaId: id };
 
     if (advancementYear) {
-      query['añoAvance'] = advancementYear;
+      query['añoAvance'] = new Date(`${advancementYear}-1-1`).toISOString(); ;
     }
 
     if (period) {
