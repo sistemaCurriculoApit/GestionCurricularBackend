@@ -13,6 +13,8 @@ const queryHomologations = (query, paginated, pageNumber, pageSize = paginationS
     .limit(pageSize).sort({ fechaCreacion: -1 });
 };
 
+const queryHomologationsCount = (query) => HomologationModel.count(query);
+
 router.get('/', async (req, res) => {
   const { page, search, dateCreationFrom, dateCreationTo, paginated } = req.query;
 
@@ -40,9 +42,9 @@ router.get('/', async (req, res) => {
       ];
     }
 
-    const homologations = await queryHomologations(query, paginated, pageNumber);
+    const [homologations, homologationsCount] = await Promise.all([queryHomologations(query, paginated, pageNumber), queryHomologationsCount(query)]);
 
-    res.status(200).json({ homologations, homologationsCount: homologations.length });
+    res.status(200).json({ homologations, homologationsCount });
   } catch (error) {
     res.status(400).json({
       error: true,
@@ -128,9 +130,9 @@ router.get('/applicants/:id', async (req, res) => {
     const pageNumber = page && page >= 0 ? page : 0;
     const query = { identificacionSolicitante: id };
 
-    const homologations = await queryHomologations(query, true, pageNumber);
+    const [homologations, homologationsCount] = await Promise.all([queryHomologations(query, true, pageNumber), queryHomologationsCount(query)]);
 
-    res.status(200).json({ homologations, homologationsCount: homologations.length });
+    res.status(200).json({ homologations, homologationsCount });
   } catch (error) {
     res.status(400).json({
       error: true,
@@ -152,12 +154,12 @@ router.get('/periods/:period', async (req, res) => {
     const pageNumber = page && page >= 0 ? page : 0;
 
     if (homologacionYear) {
-      query['añoHomologacion'] = new Date(`${homologacionYear}-1-1`).toISOString(); ;
+      query['añoHomologacion'] = new Date(`${homologacionYear}-1-1`).toISOString();
     }
 
-    const homologations = await queryHomologations(query, true, pageNumber);
+    const [homologations, homologationsCount] = await Promise.all([queryHomologations(query, true, pageNumber), queryHomologationsCount(query)]);
 
-    res.status(200).json({ homologations, homologationsCount: homologations.length });
+    res.status(200).json({ homologations, homologationsCount });
   } catch (error) {
     res.status(400).json({
       error: true,

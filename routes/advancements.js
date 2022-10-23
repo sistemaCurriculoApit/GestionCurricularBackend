@@ -3,7 +3,7 @@ const AdvancementModel = require('../models/advancement');
 const ProfessorModel = require('../models/docente');
 const { paginationSize } = require('../constants/constants');
 
-const queryAdvancement = (query, paginated, pageNumber, pageSize = paginationSize) => {
+const queryAdvancements = (query, paginated, pageNumber, pageSize = paginationSize) => {
   if (!paginated) {
     return AdvancementModel.find(query).sort({ fechaCreacion: -1 });
   }
@@ -12,6 +12,8 @@ const queryAdvancement = (query, paginated, pageNumber, pageSize = paginationSiz
     .skip(pageNumber * pageSize)
     .limit(pageSize).sort({ fechaCreacion: -1 });
 };
+
+const queryAdvancementsCount = (query) => AdvancementModel.count(query);
 
 router.get('/', async (req, res) => {
   const {
@@ -52,9 +54,9 @@ router.get('/', async (req, res) => {
       }
     }
 
-    const advancements = await queryAdvancement(query, paginated, pageNumber);
+    const [advancements, advancementsCount] = await Promise.all([queryAdvancements(query, paginated, pageNumber), queryAdvancementsCount(query)]);
 
-    res.status(200).json({ advancements, advancementsCount: advancements.length });
+    res.status(200).json({ advancements, advancementsCount });
   } catch (error) {
     res.status(400).json({
       error: true,
@@ -95,9 +97,9 @@ router.get('/professors', async (req, res) => {
       query.descripcion = new RegExp(search, 'ig');
     }
 
-    const advancements = await queryAdvancement(query, true, pageNumber);
+    const [advancements, advancementsCount] = await Promise.all([queryAdvancements(query, true, pageNumber), queryAdvancementsCount(query)]);
 
-    res.status(200).json({ advancements, advancementsCount: advancements.length });
+    res.status(200).json({ advancements, advancementsCount });
   } catch (error) {
     res.status(400).json({
       error: true,
@@ -124,9 +126,9 @@ router.get('/professors/:id', async (req, res) => {
       query['añoAvance'] = new Date(`${advancementYear}-1-1`).toISOString();
     }
 
-    const advancements = await queryAdvancement(query, true, pageNumber, paginationSizeLocal);
+    const [advancements, advancementsCount] = await Promise.all([queryAdvancements(query, true, pageNumber, paginationSizeLocal), queryAdvancementsCount(query)]);
 
-    res.status(200).json({ advancements, advancementsCount: advancements.length });
+    res.status(200).json({ advancements, advancementsCount });
   } catch (error) {
     res.status(400).json({
       error: true,
@@ -157,9 +159,9 @@ router.get('/subjects/:id', async (req, res) => {
       query.periodo = period;
     }
 
-    const advancements = await queryAdvancement(query, true, pageNumber, paginationSizeLocal);
+    const [advancements, advancementsCount] = await Promise.all([queryAdvancements(query, true, pageNumber, paginationSizeLocal), queryAdvancementsCount(query)]);
 
-    res.status(200).json({ advancements, advancementsCount: advancements.length });
+    res.status(200).json({ advancements, advancementsCount });
   } catch (error) {
     res.status(400).json({
       error: true,
@@ -185,9 +187,9 @@ router.get('/periods/:period', async (req, res) => {
       query['añoAvance'] = new Date(`${advancementYear}-1-1`).toISOString();
     }
 
-    const advancements = await queryAdvancement(query, true, pageNumber);
+    const [advancements, advancementsCount] = await Promise.all([queryAdvancements(query, true, pageNumber), queryAdvancementsCount(query)]);
 
-    res.status(200).json({ advancements, advancementsCount: advancements.length });
+    res.status(200).json({ advancements, advancementsCount });
   } catch (error) {
     console.log(error);
     res.status(400).json({
