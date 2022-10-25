@@ -17,6 +17,7 @@ router.post('/login', async (req, res) => {
       });
     }
     /** pensiende validacion de la contraseña */
+    if(!req.body.googleAuth){
     const hashPassword = crypto.createHash('md5').update(req.body.contrasena).digest('hex');
 
     if (hashPassword !== user.contrasena) {
@@ -27,6 +28,7 @@ router.post('/login', async (req, res) => {
         }
       });
     }
+  }
 
     const token = jwt.sign({ _id: user._id }, process.env.SECRET);
     user.contrasena = undefined;
