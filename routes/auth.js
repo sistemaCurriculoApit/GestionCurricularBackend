@@ -17,7 +17,8 @@ router.post('/login', async (req, res) => {
       });
     }
     /** pensiende validacion de la contraseña */
-    if(!req.body.googleAuth){
+    
+    if(!req.body.googleIdentity){
     const hashPassword = crypto.createHash('md5').update(req.body.contrasena).digest('hex');
 
     if (hashPassword !== user.contrasena) {
