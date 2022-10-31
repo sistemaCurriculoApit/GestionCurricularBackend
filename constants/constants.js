@@ -7,9 +7,13 @@ constant.userProfilesObject = {
     id: 1,
     title: 'Administrador',
   },
-  coor: {
+  coorProg: {
     id: 2,
-    title: 'Coordinador',
+    title: 'CoordinadorPrograma',
+  },
+  coorArea: {
+    id: 5,
+    title: 'CoordinadorArea',
   },
   doc: {
     id: 3,
@@ -28,7 +32,11 @@ constant.userProfilesArray = [
   },
   {
     id: 2,
-    title: 'Coordinador',
+    title: 'CoordinadorPrograma',
+  },
+  {
+    id: 5,
+    title: 'CoordinadorArea',
   },
   {
     id: 3,
