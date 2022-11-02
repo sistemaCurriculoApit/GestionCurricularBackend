@@ -2,6 +2,7 @@ const router = require('express').Router();
 const AdvancementModel = require('../models/advancement');
 const ProfessorModel = require('../models/docente');
 const { paginationSize } = require('../constants/constants');
+const concertacion = require('../models/concertacion');
 
 const queryAdvancements = (query, paginated, pageNumber, pageSize = paginationSize) => {
   if (!paginated) {
@@ -242,7 +243,7 @@ router.post('/', async (req, res) => {
       fechaCreacion: new Date(),
       estado: true,
     });
-
+    console.log(advancement)
     const save = await advancement.save();
     res.status(200).json(save);
   } catch (err) {
@@ -281,6 +282,7 @@ router.put('/:id', async (req, res) => {
     period,
     advancementPercentage,
     description,
+    concertacion
   } = req.body;
 
   const advancement = {
@@ -295,6 +297,7 @@ router.put('/:id', async (req, res) => {
     porcentajeAvance: advancementPercentage,
     descripcion: description,
     fechaActualizacion: new Date(),
+    concertacion: concertacion
   };
   try {
     const update = await AdvancementModel.updateOne({

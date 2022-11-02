@@ -5,6 +5,7 @@ const area = require('./area');
 const subject = require('./asignatura');
 const professor = require('./docente');
 const content = require('./contenido');
+const concertacion = require('./concertacion');
 
 const advancement = mongoose.Schema({
   Id: {
@@ -61,6 +62,10 @@ const advancement = mongoose.Schema({
   estado: {
     type: Boolean,
     required: true
+  },
+  concertacion: {
+    type: Array,
+    content: concertacion
   }
 
 });
