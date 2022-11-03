@@ -152,7 +152,7 @@ router.get('/subjects/:id', async (req, res) => {
     const query = { asignaturaId: id };
 
     if (advancementYear) {
-      query['añoAvance'] = new Date(`${advancementYear}-1-1`).toISOString(); ;
+      query['añoAvance'] = new Date(`${advancementYear}-1-1`).toISOString();
     }
 
     if (period) {
@@ -221,7 +221,7 @@ router.post('/', async (req, res) => {
       subjectId,
       professorId,
       content,
-      advicementYear,
+      advancementYear,
       period,
       advancementPercentage,
       description,
@@ -234,7 +234,7 @@ router.post('/', async (req, res) => {
       asignaturaId: subjectId,
       docenteId: professorId,
       contenido: content,
-      añoAvance: advicementYear,
+      añoAvance: advancementYear,
       periodo: period,
       porcentajeAvance: advancementPercentage,
       descripcion: description,
@@ -277,7 +277,7 @@ router.put('/:id', async (req, res) => {
     subjectId,
     professorId,
     content,
-    advicementYear,
+    advancementYear,
     period,
     advancementPercentage,
     description,
@@ -290,7 +290,7 @@ router.put('/:id', async (req, res) => {
     asignaturaId: subjectId,
     docenteId: professorId,
     contenido: content,
-    añoAvance: advicementYear,
+    añoAvance: advancementYear,
     periodo: period,
     porcentajeAvance: advancementPercentage,
     descripcion: description,
