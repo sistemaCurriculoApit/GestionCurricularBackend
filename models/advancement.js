@@ -7,7 +7,7 @@ const professor = require('./docente');
 const content = require('./contenido');
 
 const advancement = mongoose.Schema({
-  Id: {
+  programaId: {
     type: mongoose.Schema.ObjectId,
     ref: program
   },
