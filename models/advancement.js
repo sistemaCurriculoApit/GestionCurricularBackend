@@ -8,7 +8,7 @@ const content = require('./contenido');
 const concertacion = require('./concertacion');
 
 const advancement = mongoose.Schema({
-  Id: {
+  programaId: {
     type: mongoose.Schema.ObjectId,
     ref: program
   },

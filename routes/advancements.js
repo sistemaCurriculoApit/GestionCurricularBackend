@@ -3,6 +3,7 @@ const AdvancementModel = require('../models/advancement');
 const ProfessorModel = require('../models/docente');
 const { paginationSize } = require('../constants/constants');
 const concertacion = require('../models/concertacion');
+const plan = require('../models/plan');
 
 const queryAdvancements = (query, paginated, pageNumber, pageSize = paginationSize) => {
   if (!paginated) {
@@ -227,11 +228,11 @@ router.post('/', async (req, res) => {
       advancementPercentage,
       description,
     } = req.body;
-
+    
     const advancement = new AdvancementModel({
       programaId: programId,
-      planId,
-      areaId,
+      planId: planId,
+      areaId: areaId,
       asignaturaId: subjectId,
       docenteId: professorId,
       contenido: content,
@@ -248,6 +249,7 @@ router.post('/', async (req, res) => {
         {"nombre":"Evaluacion","porcentaje":50.0,"visto": false},
       ]
     });
+    console.log(advancement)
     const save = await advancement.save();
     res.status(200).json(save);
   } catch (err) {
