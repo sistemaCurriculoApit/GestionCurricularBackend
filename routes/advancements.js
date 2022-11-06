@@ -242,8 +242,12 @@ router.post('/', async (req, res) => {
       fechaActualizacion: new Date(),
       fechaCreacion: new Date(),
       estado: true,
+      concertacion: [
+        {"nombre":"Parcial","porcentaje":25.0,"visto": false},
+        {"nombre":"Final","porcentaje":25.0,"visto": false},
+        {"nombre":"Evaluacion","porcentaje":50.0,"visto": false},
+      ]
     });
-    console.log(advancement)
     const save = await advancement.save();
     res.status(200).json(save);
   } catch (err) {
