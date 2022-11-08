@@ -6,6 +6,7 @@ const asignaturaRoute = require('./routes/asignaturas');
 const advancementsRoute = require('./routes/advancements');
 const contenidoRoute = require('./routes/contenido');
 const estudianteRoute = require('./routes/estudiante');
+const equivalencia = require('./routes/equivalencia');
 const actaRoute = require('./routes/acta');
 const planRoute = require('./routes/plan');
 const dashboardRoute = require('./routes/dashboard');
@@ -46,6 +47,7 @@ router.use('/area/', areaRoute);
 router.use('/homologations/', verifyToken, homologationsRoute);
 router.use('/advancements/', verifyToken, advancementsRoute);
 router.use('/estudiante/', estudianteRoute);
+router.use('/equivalencia/', equivalencia);
 
 app.use('/api/', router);
 

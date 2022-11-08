@@ -3,6 +3,35 @@ const ProgramaModel = require('../models/programa');
 const verifyToken = require('../util/tokenValidation');
 const { paginationSize } = require('../constants/constants');
 
+router.get('/', async (req, res) => {
+  try {
+    const programs = await ProgramaModel.find({}).populate({
+      path: 'plan._id',
+      populate: {
+        path: 'area._id'
+      }
+    });
+
+    if (!programs) { throw new Error('no results where found'); }
+
+    res.status(200).json({
+      error: false,
+      programs: programs.map((program) => ({
+        ...program._doc,
+        plan: program._doc.plan.map((plan) => plan._id).map((plan) => ({
+          ...plan._doc,
+          area: plan._doc.area.map((area) => area._id)
+        }))
+      }))
+    });
+  } catch (error) {
+    res.status(400).json({
+      error: true,
+      descripcion: error.message
+    });
+  }
+});
+
 router.post('/add', verifyToken, async (req, res) => {
   try {
     const programaValidar = await ProgramaModel.findOne({ codigo: req.body.codigo });
@@ -40,7 +69,6 @@ router.get('/all', verifyToken, async (req, res) => {
     const pageNumber = req.query.page ? req.query.page * 1 : 0;
     let query = {};
 
-    // Datos para los filtros
     const search = req.query.search;
     const dateCreationFrom = req.query.dateCreationFrom;
     const dateCreationTo = req.query.dateCreationTo;
