@@ -1,19 +1,9 @@
 const router = require('express').Router();
 const AdvancementModel = require('../models/advancement');
+const SubjectModel = require('../models/asignatura');
 const ProfessorModel = require('../models/docente');
 const { paginationSize } = require('../constants/constants');
-
-const queryAdvancements = (query, paginated, pageNumber, pageSize = paginationSize) => {
-  if (!paginated) {
-    return AdvancementModel.find(query).sort({ fechaCreacion: -1 });
-  }
-
-  return AdvancementModel.find(query)
-    .skip(pageNumber * pageSize)
-    .limit(pageSize).sort({ fechaCreacion: -1 });
-};
-
-const queryAdvancementsCount = (query) => AdvancementModel.count(query);
+const { queryAdvancements, queryAdvancementsCount } = require('../controllers/advancementsController');
 
 router.get('/', async (req, res) => {
   const {
@@ -61,6 +51,25 @@ router.get('/', async (req, res) => {
     res.status(400).json({
       error: true,
       description: error.message
+    });
+  }
+});
+
+router.get('/periods', async (req, res) => {
+  try {
+    const years = await AdvancementModel.distinct('añoAvance');
+    const periodsPerYear = await Promise.all(years.map((year) => AdvancementModel.find({ añoAvance: year }).distinct('periodo')));
+    const yearsPeriod = years
+      .reduce((acc, year, i) => [
+        ...acc,
+        ...periodsPerYear[i].map((period) => `${new Date(year).getFullYear()} - ${period}`)
+      ], []);
+
+    res.status(200).json({ periods: yearsPeriod });
+  } catch (e) {
+    res.status(400).json({
+      error: true,
+      description: e.message
     });
   }
 });
@@ -191,7 +200,64 @@ router.get('/periods/:period', async (req, res) => {
 
     res.status(200).json({ advancements, advancementsCount });
   } catch (error) {
-    console.log(error);
+    res.status(400).json({
+      error: true,
+      descripcion: error.message
+    });
+  }
+});
+
+router.get('/years/:year/periods/:period/subjects', async (req, res) => {
+  const { period: periodo, year } = req.params;
+
+  try {
+    if (!periodo || !year) {
+      throw new Error('Period or Year were not provided');
+    }
+
+    const query = {
+      periodo,
+      añoAvance: new Date(`${year}-1-1`).toISOString()
+    };
+
+    const subjectsId = await AdvancementModel
+      .find(query)
+      .distinct('asignaturaId');
+
+    const subjects = await SubjectModel
+      .find({ _id: { $in: subjectsId } });
+
+    res.status(200).json({ subjects });
+  } catch (error) {
+    res.status(400).json({
+      error: true,
+      descripcion: error.message
+    });
+  }
+});
+
+router.get('/years/:year/periods/:period/professors', async (req, res) => {
+  const { period: periodo, year } = req.params;
+
+  try {
+    if (!periodo || !year) {
+      throw new Error('Period or Year were not provided');
+    }
+
+    const query = {
+      periodo,
+      añoAvance: new Date(`${year}-1-1`).toISOString()
+    };
+
+    const professorIds = await AdvancementModel
+      .find(query)
+      .distinct('docenteId');
+
+    const professors = await ProfessorModel
+      .find({ _id: { $in: professorIds } });
+
+    res.status(200).json({ professors });
+  } catch (error) {
     res.status(400).json({
       error: true,
       descripcion: error.message

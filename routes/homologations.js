@@ -1,19 +1,7 @@
 const router = require('express').Router();
 const HomologationModel = require('../models/homologation');
 const StudentModel = require('../models/estudiante');
-const { paginationSize } = require('../constants/constants');
-
-const queryHomologations = (query, paginated, pageNumber, pageSize = paginationSize) => {
-  if (!paginated) {
-    return HomologationModel.find(query).sort({ fechaCreacion: -1 });
-  }
-
-  return HomologationModel.find(query)
-    .skip(pageNumber * pageSize)
-    .limit(pageSize).sort({ fechaCreacion: -1 });
-};
-
-const queryHomologationsCount = (query) => HomologationModel.count(query);
+const { queryHomologations, queryHomologationsCount } = require('../controllers/homologationsController');
 
 router.get('/', async (req, res) => {
   const { page, search, dateCreationFrom, dateCreationTo, paginated } = req.query;
@@ -49,6 +37,25 @@ router.get('/', async (req, res) => {
     res.status(400).json({
       error: true,
       description: error.message
+    });
+  }
+});
+
+router.get('/periods', async (req, res) => {
+  try {
+    const years = await HomologationModel.distinct('añoHomologacion');
+    const periodsPerYear = await Promise.all(years.map((year) => HomologationModel.find({ añoHomologacion: year }).distinct('periodo')));
+    const yearsPeriod = years
+      .reduce((acc, year, i) => [
+        ...acc,
+        ...periodsPerYear[i].map((period) => `${new Date(year).getFullYear()} - ${period}`)
+      ], []);
+
+    res.status(200).json({ periods: yearsPeriod });
+  } catch (e) {
+    res.status(400).json({
+      error: true,
+      description: e.message
     });
   }
 });
@@ -122,6 +129,7 @@ router.post('/', async (req, res) => {
 router.get('/applicants/:id', async (req, res) => {
   const { page } = req.query;
   const { id } = req.params;
+
   try {
     if (!id) {
       throw new Error('No applicant Id was provided');
@@ -142,7 +150,7 @@ router.get('/applicants/:id', async (req, res) => {
 });
 
 router.get('/periods/:period', async (req, res) => {
-  const { page, homologacionYear } = req.query;
+  const { page, homologationYear } = req.query;
   const { period: periodo } = req.params;
 
   try {
@@ -153,8 +161,8 @@ router.get('/periods/:period', async (req, res) => {
     const query = { periodo };
     const pageNumber = page && page >= 0 ? page : 0;
 
-    if (homologacionYear) {
-      query['añoHomologacion'] = new Date(`${homologacionYear}-1-1`).toISOString();
+    if (homologationYear) {
+      query['añoHomologacion'] = new Date(`${homologationYear}-1-1`).toISOString();
     }
 
     const [homologations, homologationsCount] = await Promise.all([queryHomologations(query, true, pageNumber), queryHomologationsCount(query)]);
