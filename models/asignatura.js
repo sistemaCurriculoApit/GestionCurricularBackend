@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
 const contenido = require('../models/contenido');
+const equivalencia = require('../models/equivalencia');
 const docente = require('../models/docente');
 const asignatura = mongoose.Schema({
   nombre: {
@@ -97,7 +98,12 @@ const asignatura = mongoose.Schema({
       ref: docente
     }
   }],
-  equivalencia: [this]
+  equivalencia: [{
+    _id: {
+      type: mongoose.Schema.ObjectId,
+      ref: equivalencia
+    }
+  }]
 });
 
 module.exports = mongoose.model('Asignatura', asignatura);
