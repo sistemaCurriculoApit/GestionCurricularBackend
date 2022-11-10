@@ -2,6 +2,8 @@ const router = require('express').Router();
 const AdvancementModel = require('../models/advancement');
 const ProfessorModel = require('../models/docente');
 const { paginationSize } = require('../constants/constants');
+const concertacion = require('../models/concertacion');
+const plan = require('../models/plan');
 
 const queryAdvancements = (query, paginated, pageNumber, pageSize = paginationSize) => {
   if (!paginated) {
@@ -152,7 +154,7 @@ router.get('/subjects/:id', async (req, res) => {
     const query = { asignaturaId: id };
 
     if (advancementYear) {
-      query['añoAvance'] = new Date(`${advancementYear}-1-1`).toISOString(); ;
+      query['añoAvance'] = new Date(`${advancementYear}-1-1`).toISOString();
     }
 
     if (period) {
@@ -221,28 +223,33 @@ router.post('/', async (req, res) => {
       subjectId,
       professorId,
       content,
-      advicementYear,
+      advancementYear,
       period,
       advancementPercentage,
       description,
     } = req.body;
-
+    
     const advancement = new AdvancementModel({
       programaId: programId,
-      planId,
-      areaId,
+      planId: planId,
+      areaId: areaId,
       asignaturaId: subjectId,
       docenteId: professorId,
       contenido: content,
-      añoAvance: advicementYear,
+      añoAvance: advancementYear,
       periodo: period,
       porcentajeAvance: advancementPercentage,
       descripcion: description,
       fechaActualizacion: new Date(),
       fechaCreacion: new Date(),
       estado: true,
+      concertacion: [
+        {"nombre":"Parcial","porcentaje":25.0,"visto": false},
+        {"nombre":"Final","porcentaje":25.0,"visto": false},
+        {"nombre":"Evaluacion","porcentaje":50.0,"visto": false},
+      ]
     });
-
+    console.log(advancement)
     const save = await advancement.save();
     res.status(200).json(save);
   } catch (err) {
@@ -277,10 +284,11 @@ router.put('/:id', async (req, res) => {
     subjectId,
     professorId,
     content,
-    advicementYear,
+    advancementYear,
     period,
     advancementPercentage,
     description,
+    concertacion
   } = req.body;
 
   const advancement = {
@@ -290,11 +298,12 @@ router.put('/:id', async (req, res) => {
     asignaturaId: subjectId,
     docenteId: professorId,
     contenido: content,
-    añoAvance: advicementYear,
+    añoAvance: advancementYear,
     periodo: period,
     porcentajeAvance: advancementPercentage,
     descripcion: description,
     fechaActualizacion: new Date(),
+    concertacion: concertacion
   };
   try {
     const update = await AdvancementModel.updateOne({
