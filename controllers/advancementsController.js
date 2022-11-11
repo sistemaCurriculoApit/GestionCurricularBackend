@@ -3,10 +3,15 @@ const { paginationSize } = require('../constants/constants');
 
 const queryAdvancements = (query, paginated, pageNumber, pageSize = paginationSize) => {
   if (!paginated) {
-    return AdvancementModel.find(query).populate('asignaturaId').sort({ fechaCreacion: -1 });
+    return AdvancementModel.find(query)
+      .populate('docenteId')
+      .populate('asignaturaId')
+      .sort({ fechaCreacion: -1 });
   }
 
-  return AdvancementModel.find(query).populate('asignaturaId')
+  return AdvancementModel.find(query)
+    .populate('docenteId')
+    .populate('asignaturaId')
     .skip(pageNumber * pageSize)
     .limit(pageSize).sort({ fechaCreacion: -1 });
 };
