@@ -16,6 +16,10 @@ const homologacion = mongoose.Schema({
     type: mongoose.Schema.ObjectId,
     ref: subject
   },
+  identificacionSolicitante: {
+    type: String,
+    required: true
+  },
   asignaturaSolicitante: {
     type: String,
     required: true

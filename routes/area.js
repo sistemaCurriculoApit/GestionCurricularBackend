@@ -3,6 +3,51 @@ const AreaModel = require('../models/area');
 const verifyToken = require('../util/tokenValidation');
 const { paginationSize } = require('../constants/constants');
 
+router.get('/:areaId/subjects', async (req, res) => {
+  const { areaId } = req.params;
+  const { page = 0 } = req.query;
+
+  try {
+    const selectedPage = page ? page * paginationSize : 0;
+    const areas = await AreaModel.findById(areaId)
+      .slice('asignatura', [selectedPage, selectedPage + paginationSize])
+      .populate({
+        path: 'asignatura._id',
+        populate: [
+          {
+            path: 'contenido._id'
+          },
+          {
+            path: 'docente._id'
+          },
+          {
+            path: 'equivalencia._id'
+          },
+        ]
+      });
+
+    if (!areas) { throw new Error('no results where found'); }
+
+    res.status(200).json({
+      error: false,
+      subjects: areas.asignatura
+        .map(subject => subject._id)
+        .map(subject => ({
+          ...subject._doc,
+          contenido: subject.contenido.map(content => content._id),
+          docente: subject.docente.map(professor => professor._id),
+          equivalencia: subject.equivalencia.map(equivalence => equivalence._id),
+        }))
+        .sort((a, b) => b.fechaCreacion - a.fechaCreacion)
+    });
+  } catch (error) {
+    res.status(400).json({
+      error: true,
+      descripcion: error.message
+    });
+  }
+});
+
 router.post('/add', verifyToken, async (req, res) => {
   try {
     const areaValidar = await AreaModel.findOne({ codigo: req.body.codigo });
