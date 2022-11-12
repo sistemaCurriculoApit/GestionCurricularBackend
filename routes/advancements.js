@@ -292,11 +292,11 @@ router.post('/', async (req, res) => {
       advancementPercentage,
       description,
     } = req.body;
-
+    
     const advancement = new AdvancementModel({
       programaId: programId,
-      planId,
-      areaId,
+      planId: planId,
+      areaId: areaId,
       asignaturaId: subjectId,
       docenteId: professorId,
       contenido: content,
@@ -307,8 +307,13 @@ router.post('/', async (req, res) => {
       fechaActualizacion: new Date(),
       fechaCreacion: new Date(),
       estado: true,
+      concertacion: [
+        {"nombre":"Parcial","porcentaje":25.0,"visto": false},
+        {"nombre":"Final","porcentaje":25.0,"visto": false},
+        {"nombre":"Evaluacion","porcentaje":50.0,"visto": false},
+      ]
     });
-
+    console.log(advancement)
     const save = await advancement.save();
     res.status(200).json(save);
   } catch (err) {
@@ -347,6 +352,7 @@ router.put('/:id', async (req, res) => {
     period,
     advancementPercentage,
     description,
+    concertacion
   } = req.body;
 
   const advancement = {
@@ -361,6 +367,7 @@ router.put('/:id', async (req, res) => {
     porcentajeAvance: advancementPercentage,
     descripcion: description,
     fechaActualizacion: new Date(),
+    concertacion: concertacion
   };
   try {
     const update = await AdvancementModel.updateOne({
