@@ -104,7 +104,7 @@ router.delete('/:id', verifyToken, async (req, res) => {
   const { id } = req.params;
 
   try {
-    const actaDelete = ActaModel.deleteOne({
+    const actaDelete = await ActaModel.deleteOne({
       _id: id
     });
     res.status(200).json({

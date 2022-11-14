@@ -1,7 +1,7 @@
 // unused collection
 const mongoose = require('mongoose');
 
-const equivalencia = mongoose.Schema({
+const equivalencias = mongoose.Schema({
   sourcePlan: {
     type: String,
     required: true
@@ -19,4 +19,4 @@ const equivalencia = mongoose.Schema({
   }
 });
 
-module.exports = mongoose.model('Equivalencia', equivalencia);
+module.exports = mongoose.model('Equivalencia', equivalencias);

@@ -1,7 +1,7 @@
 const concertacion = {
-    nombre: String,
-    porcentaje: Number,
-    visto: Boolean
-}
+  nombre: String,
+  porcentaje: Number,
+  visto: Boolean
+};
 
 module.exports = concertacion
