@@ -58,11 +58,25 @@ router.get('/', async (req, res) => {
 router.get('/periods', async (req, res) => {
   try {
     const years = await AdvancementModel.distinct('añoAvance');
-    const periodsPerYear = await Promise.all(years.map((year) => AdvancementModel.find({ añoAvance: year }).distinct('periodo')));
-    const yearsPeriod = years
+    const uniqueYears = years
+      .map((year) => year.getFullYear())
+      .filter((year, i, _this) => (
+        _this.findIndex((_year) => _year === year) === i
+      ));
+
+    const periodsPerYear = await Promise.all(uniqueYears.map((year) => (
+      AdvancementModel.find({
+        añoAvance: {
+          $gte: new Date(year, 0, 0).toISOString(),
+          $lte: new Date(year + 1, 0, 0).toISOString()
+        }
+      }).distinct('periodo')
+    )));
+
+    const yearsPeriod = uniqueYears
       .reduce((acc, year, i) => [
         ...acc,
-        ...periodsPerYear[i].map((period) => `${new Date(year).getFullYear()} - ${period}`)
+        ...periodsPerYear[i].map((period) => `${year} - ${period}`)
       ], []);
 
     res.status(200).json({ periods: yearsPeriod });
@@ -292,11 +306,11 @@ router.post('/', async (req, res) => {
       advancementPercentage,
       description,
     } = req.body;
-    
+
     const advancement = new AdvancementModel({
       programaId: programId,
-      planId: planId,
-      areaId: areaId,
+      planId,
+      areaId,
       asignaturaId: subjectId,
       docenteId: professorId,
       contenido: content,
@@ -308,9 +322,9 @@ router.post('/', async (req, res) => {
       fechaCreacion: new Date(),
       estado: true,
       concertacion: [
-        {"nombre":"Evaluacion","porcentaje":50.0,"visto": false},
-        {"nombre":"Parcial","porcentaje":25.0,"visto": false},
-        {"nombre":"Final","porcentaje":25.0,"visto": false},
+        { nombre: 'Evaluacion', porcentaje: 50.0, visto: false },
+        { nombre: 'Parcial', porcentaje: 25.0, visto: false },
+        { nombre: 'Final', porcentaje: 25.0, visto: false },
       ]
     });
     const save = await advancement.save();

@@ -8,9 +8,15 @@ const verifyToken = require('../util/tokenValidation');
 
 router.get('/dataCount', verifyToken, async (req, res) => {
   try {
-    const totalUsers = await userModel.count({});
-    const totalDocentes = await docenteModel.count({});
-    const totalActas = await actaModel.count({});
+    const [
+      totalUsers,
+      totalDocentes,
+      totalActas
+    ] = await Promise.all([
+      userModel.count({}),
+      docenteModel.count({}),
+      actaModel.count({})
+    ]);
 
     res.send({ totalUsers, totalDocentes, totalActas });
   } catch (error) {
@@ -21,18 +27,19 @@ router.get('/dataCount', verifyToken, async (req, res) => {
 
 router.get('/chartHomologaciones', verifyToken, async (req, res) => {
   try {
-    const query = {};
-    const homologacionesByMonth = [];
-    const date = new Date();
+    const promises = [];
+    const currentYear = new Date().getFullYear();
     for (let i = 0; i < 12; i++) {
-      const firstDay = new Date(date.getFullYear(), i, 1);
-      const lastDay = new Date(date.getFullYear(), i + 1, 0);
-      query.fechaCreacion = {};
-      query.fechaCreacion.$gte = firstDay.toISOString();
-      query.fechaCreacion.$lte = lastDay.toISOString();
-      const homologaciones = await homologacion.count(query);
-      homologacionesByMonth.push(homologaciones);
+      const query = {
+        fechaCreacion: {
+          $gte: new Date(currentYear, i, 0).toISOString(),
+          $lte: new Date(currentYear, i + 1, 0).toISOString()
+        }
+      };
+      promises.push(homologacion.count(query));
     }
+
+    const homologacionesByMonth = await Promise.all(promises);
 
     res.send({ homologacionesByMonth });
   } catch (error) {
@@ -43,18 +50,19 @@ router.get('/chartHomologaciones', verifyToken, async (req, res) => {
 
 router.get('/chartAvances', verifyToken, async (req, res) => {
   try {
-    const query = {};
-    const avancesByMonth = [];
-    const date = new Date();
+    const promises = [];
+    const currentYear = new Date().getFullYear();
     for (let i = 0; i < 12; i++) {
-      const firstDay = new Date(date.getFullYear(), i, 1);
-      const lastDay = new Date(date.getFullYear(), i + 1, 0);
-      query.fechaCreacion = {};
-      query.fechaCreacion.$gte = firstDay.toISOString();
-      query.fechaCreacion.$lte = lastDay.toISOString();
-      const avances = await avance.count(query);
-      avancesByMonth.push(avances);
+      const query = {
+        fechaCreacion: {
+          $gte: new Date(currentYear, i, 0).toISOString(),
+          $lte: new Date(currentYear, i + 1, 0).toISOString()
+        }
+      };
+      promises.push(avance.count(query));
     }
+
+    const avancesByMonth = await Promise.all(promises);
 
     res.send({ avancesByMonth });
   } catch (error) {

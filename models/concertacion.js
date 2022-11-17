@@ -4,4 +4,4 @@ const concertacion = {
   visto: Boolean
 };
 
-module.exports = concertacion
+module.exports = concertacion;
