@@ -74,17 +74,14 @@ router.post('/user/add', verifyToken, async (req, res) => {
       }
     }
 
-    const hashPassword = crypto.createHash('md5').update(req.body.contrasena).digest('hex');
     const user = new UserModel({
       nombreUsuario: req.body.nombreUsuario,
       identificacion: req.body.identificacion,
       correo: req.body.correo,
-      contrasena: hashPassword,
       rolId: req.body.rolId,
       fechaCreacion: new Date(),
       fechaActualizacion: new Date(),
       estado: true
-
     });
 
     const save = await user.save();

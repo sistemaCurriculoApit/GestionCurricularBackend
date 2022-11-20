@@ -13,10 +13,6 @@ const user = mongoose.Schema({
     type: String,
     required: true
   },
-  contrasena: {
-    type: String,
-    required: true
-  },
   rolId: {
     type: Number,
     required: true
@@ -27,7 +23,6 @@ const user = mongoose.Schema({
   },
   fechaActualizacion: {
     type: Date,
-
   },
   estado: {
     type: Boolean,
