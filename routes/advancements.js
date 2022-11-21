@@ -1,97 +1,31 @@
 const router = require('express').Router();
 const AdvancementModel = require('../models/advancement');
-const SubjectModel = require('../models/asignatura');
 const ProfessorModel = require('../models/docente');
 const { paginationSize } = require('../constants/constants');
-const { queryAdvancements, queryAdvancementsCount } = require('../controllers/advancementsController');
+const {
+  getAvailablePeriods,
+  getAvailableProfessorsByPeriod,
+  getAvailableSubjectsByPeriod,
+  getAdvancements,
+  queryAdvancements,
+  queryAdvancementsCount
+} = require('../controllers/advancementsController');
 
-router.get('/', async (req, res) => {
-  const {
-    search,
-    dateCreationFrom,
-    dateCreationTo,
-    page,
-    paginated
-  } = req.query;
+router.get('/', getAdvancements);
 
-  try {
-    const pageNumber = page && page >= 0 ? page : 0;
-    const query = {};
-
-    if (dateCreationFrom || dateCreationTo) {
-      query.fechaCreacion = {};
-
-      if (dateCreationFrom) {
-        query.fechaCreacion.$gte = new Date(new Date(dateCreationFrom).toDateString()).toISOString();
-      }
-      if (dateCreationTo) {
-        query.fechaCreacion.$lte = new Date(new Date(dateCreationTo).toDateString()).toISOString();
-      }
-    }
-
-    if (search) {
-      const regex = new RegExp(search, 'ig');
-      if (paginated) {
-        query.descripcion = regex;
-      } else {
-        query.$or = [
-          { identificacionSolicitante: regex },
-          { nombreSolicitante: regex },
-          { universidadSolicitante: regex },
-          { programaSolicitante: regex },
-          { asignaturaSolicitante: regex },
-        ];
-      }
-    }
-
-    const [advancements, advancementsCount] = await Promise.all([queryAdvancements(query, paginated, pageNumber), queryAdvancementsCount(query)]);
-
-    res.status(200).json({ advancements, advancementsCount });
-  } catch (error) {
-    res.status(400).json({
-      error: true,
-      description: error.message
-    });
-  }
-});
-
-router.get('/periods', async (req, res) => {
-  try {
-    const years = await AdvancementModel.distinct('añoAvance');
-    const uniqueYears = years
-      .map((year) => year.getFullYear())
-      .filter((year, i, _this) => (
-        _this.findIndex((_year) => _year === year) === i
-      ));
-
-    const periodsPerYear = await Promise.all(uniqueYears.map((year) => (
-      AdvancementModel.find({
-        añoAvance: {
-          $gte: new Date(year, 0, 0).toISOString(),
-          $lte: new Date(year + 1, 0, 0).toISOString()
-        }
-      }).distinct('periodo')
-    )));
-
-    const yearsPeriod = uniqueYears
-      .reduce((acc, year, i) => [
-        ...acc,
-        ...periodsPerYear[i].map((period) => `${year} - ${period}`)
-      ], []);
-
-    res.status(200).json({ periods: yearsPeriod });
-  } catch (e) {
-    res.status(400).json({
-      error: true,
-      description: e.message
-    });
-  }
-});
+router.get('/periods', getAvailablePeriods);
 
 router.get('/professors', async (req, res) => {
   const { search, dateCreationFrom, dateCreationTo, email: correo, page } = req.query;
 
   try {
+    if (!correo) {
+      return res.status(400).json({
+        error: 'Wrong data provided',
+        description: 'Professor email was not provided'
+      });
+    }
+
     const pageNumber = page && page >= 0 ? page : 0;
     const professor = await ProfessorModel.findOne({ correo });
 
@@ -146,7 +80,10 @@ router.get('/professors/:id', async (req, res) => {
     }
 
     if (advancementYear) {
-      query['añoAvance'] = new Date(`${advancementYear}-1-1`).toISOString();
+      query['añoAvance'] = {
+        $gte: new Date(`${advancementYear}-0-0`).toISOString(),
+        $lte: new Date(`${Number(advancementYear) + 1}-0-0`).toISOString()
+      };
     }
 
     const [advancements, advancementsCount] = await Promise.all([queryAdvancements(query, true, pageNumber, paginationSizeLocal), queryAdvancementsCount(query)]);
@@ -175,7 +112,10 @@ router.get('/subjects/:id', async (req, res) => {
     const query = { asignaturaId: id };
 
     if (advancementYear) {
-      query['añoAvance'] = new Date(`${advancementYear}-1-1`).toISOString();
+      query['añoAvance'] = {
+        $gte: new Date(`${advancementYear}-0-0`).toISOString(),
+        $lte: new Date(`${Number(advancementYear) + 1}-0-0`).toISOString()
+      };
     }
 
     if (period) {
@@ -207,7 +147,10 @@ router.get('/periods/:period', async (req, res) => {
     const query = { periodo };
 
     if (advancementYear) {
-      query['añoAvance'] = new Date(`${advancementYear}-1-1`).toISOString();
+      query['añoAvance'] = {
+        $gte: new Date(`${advancementYear}-0-0`).toISOString(),
+        $lte: new Date(`${Number(advancementYear) + 1}-0-0`).toISOString()
+      };
     }
 
     const [advancements, advancementsCount] = await Promise.all([queryAdvancements(query, true, pageNumber), queryAdvancementsCount(query)]);
@@ -221,63 +164,9 @@ router.get('/periods/:period', async (req, res) => {
   }
 });
 
-router.get('/years/:year/periods/:period/subjects', async (req, res) => {
-  const { period: periodo, year } = req.params;
+router.get('/years/:year/periods/:period/subjects', getAvailableSubjectsByPeriod);
 
-  try {
-    if (!periodo || !year) {
-      throw new Error('Period or Year were not provided');
-    }
-
-    const query = {
-      periodo,
-      añoAvance: new Date(`${year}-1-1`).toISOString()
-    };
-
-    const subjectsId = await AdvancementModel
-      .find(query)
-      .distinct('asignaturaId');
-
-    const subjects = await SubjectModel
-      .find({ _id: { $in: subjectsId } });
-
-    res.status(200).json({ subjects });
-  } catch (error) {
-    res.status(400).json({
-      error: true,
-      descripcion: error.message
-    });
-  }
-});
-
-router.get('/years/:year/periods/:period/professors', async (req, res) => {
-  const { period: periodo, year } = req.params;
-
-  try {
-    if (!periodo || !year) {
-      throw new Error('Period or Year were not provided');
-    }
-
-    const query = {
-      periodo,
-      añoAvance: new Date(`${year}-1-1`).toISOString()
-    };
-
-    const professorIds = await AdvancementModel
-      .find(query)
-      .distinct('docenteId');
-
-    const professors = await ProfessorModel
-      .find({ _id: { $in: professorIds } });
-
-    res.status(200).json({ professors });
-  } catch (error) {
-    res.status(400).json({
-      error: true,
-      descripcion: error.message
-    });
-  }
-});
+router.get('/years/:year/periods/:period/professors', getAvailableProfessorsByPeriod);
 
 router.get('/:id', async (req, res) => {
   const { id } = req.params;

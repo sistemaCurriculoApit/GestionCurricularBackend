@@ -1,7 +1,7 @@
 const router = require('express').Router();
 const HomologationModel = require('../models/homologation');
 const StudentModel = require('../models/estudiante');
-const { queryHomologations, queryHomologationsCount } = require('../controllers/homologationsController');
+const { queryHomologations, queryHomologationsCount, getAvailablePeriods } = require('../controllers/homologationsController');
 
 router.get('/', async (req, res) => {
   const { page, search, dateCreationFrom, dateCreationTo, paginated } = req.query;
@@ -41,24 +41,7 @@ router.get('/', async (req, res) => {
   }
 });
 
-router.get('/periods', async (req, res) => {
-  try {
-    const years = await HomologationModel.distinct('añoHomologacion');
-    const periodsPerYear = await Promise.all(years.map((year) => HomologationModel.find({ añoHomologacion: year }).distinct('periodo')));
-    const yearsPeriod = years
-      .reduce((acc, year, i) => [
-        ...acc,
-        ...periodsPerYear[i].map((period) => `${new Date(year).getFullYear()} - ${period}`)
-      ], []);
-
-    res.status(200).json({ periods: yearsPeriod });
-  } catch (e) {
-    res.status(400).json({
-      error: true,
-      description: e.message
-    });
-  }
-});
+router.get('/periods', getAvailablePeriods);
 
 router.post('/', async (req, res) => {
   const {
@@ -162,7 +145,10 @@ router.get('/periods/:period', async (req, res) => {
     const pageNumber = page && page >= 0 ? page : 0;
 
     if (homologationYear) {
-      query['añoHomologacion'] = new Date(`${homologationYear}-1-1`).toISOString();
+      query['añoHomologacion'] = {
+        $gte: new Date(`${homologationYear}-0-0`).toISOString(),
+        $lte: new Date(`${Number(homologationYear) + 1}-0-0`).toISOString(),
+      };
     }
 
     const [homologations, homologationsCount] = await Promise.all([queryHomologations(query, true, pageNumber), queryHomologationsCount(query)]);
