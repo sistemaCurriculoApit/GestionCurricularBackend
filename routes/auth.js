@@ -4,8 +4,6 @@ const route = express.Router();
 const userModel = require('../models/user');
 const jwt = require('jsonwebtoken');
 
-const crypto = require('crypto');
-
 route.post('/login', async (req, res) => {
   try {
     const user = await userModel.findOne({ correo: req.body.correo });
