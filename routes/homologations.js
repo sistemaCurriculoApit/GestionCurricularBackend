@@ -135,7 +135,6 @@ router.get('/applicants/:id', async (req, res) => {
 router.get('/periods/:period', async (req, res) => {
   const { page, homologationYear } = req.query;
   const { period: periodo } = req.params;
-  console.log({ periodo, page, homologationYear });
 
   try {
     if (!periodo) {
@@ -145,7 +144,6 @@ router.get('/periods/:period', async (req, res) => {
     const query = { periodo };
     const pageNumber = page && page >= 0 ? page : 0;
 
-    console.log(new Date(homologationYear, 0, 1));
     if (homologationYear) {
       query['añoHomologacion'] = {
         $gte: new Date(homologationYear, 0, 0).toISOString(),
