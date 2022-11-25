@@ -145,7 +145,10 @@ router.get('/periods/:period', async (req, res) => {
     const pageNumber = page && page >= 0 ? page : 0;
 
     if (homologationYear) {
-      query['añoHomologacion'] = new Date(`${homologationYear}-1-1`).toISOString();
+      query['añoHomologacion'] = {
+        $gte: new Date(`${homologationYear}-0-0`).toISOString(),
+        $lte: new Date(`${Number(homologationYear) + 1}-0-0`).toISOString(),
+      };
     }
 
     const [homologations, homologationsCount] = await Promise.all([queryHomologations(query, true, pageNumber), queryHomologationsCount(query)]);

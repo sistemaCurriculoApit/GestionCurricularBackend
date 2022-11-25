@@ -80,7 +80,10 @@ router.get('/professors/:id', async (req, res) => {
     }
 
     if (advancementYear) {
-      query['añoAvance'] = new Date(`${advancementYear}-1-1`).toISOString();
+      query['añoAvance'] = {
+        $gte: new Date(`${advancementYear}-0-0`).toISOString(),
+        $lte: new Date(`${Number(advancementYear) + 1}-0-0`).toISOString()
+      };
     }
 
     const [advancements, advancementsCount] = await Promise.all([queryAdvancements(query, true, pageNumber, paginationSizeLocal), queryAdvancementsCount(query)]);
@@ -109,7 +112,10 @@ router.get('/subjects/:id', async (req, res) => {
     const query = { asignaturaId: id };
 
     if (advancementYear) {
-      query['añoAvance'] = new Date(`${advancementYear}-1-1`).toISOString();
+      query['añoAvance'] = {
+        $gte: new Date(`${advancementYear}-0-0`).toISOString(),
+        $lte: new Date(`${Number(advancementYear) + 1}-0-0`).toISOString()
+      };
     }
 
     if (period) {
@@ -141,7 +147,10 @@ router.get('/periods/:period', async (req, res) => {
     const query = { periodo };
 
     if (advancementYear) {
-      query['añoAvance'] = new Date(`${advancementYear}-1-1`).toISOString();
+      query['añoAvance'] = {
+        $gte: new Date(`${advancementYear}-0-0`).toISOString(),
+        $lte: new Date(`${Number(advancementYear) + 1}-0-0`).toISOString()
+      };
     }
 
     const [advancements, advancementsCount] = await Promise.all([queryAdvancements(query, true, pageNumber), queryAdvancementsCount(query)]);
