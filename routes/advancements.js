@@ -81,8 +81,8 @@ router.get('/professors/:id', async (req, res) => {
 
     if (advancementYear) {
       query['añoAvance'] = {
-        $gte: new Date(`${advancementYear}-0-0`).toISOString(),
-        $lte: new Date(`${Number(advancementYear) + 1}-0-0`).toISOString()
+        $gte: new Date(advancementYear, 0, 0).toISOString(),
+        $lte: new Date(Number(advancementYear) + 1, 0, 0).toISOString()
       };
     }
 
@@ -113,8 +113,8 @@ router.get('/subjects/:id', async (req, res) => {
 
     if (advancementYear) {
       query['añoAvance'] = {
-        $gte: new Date(`${advancementYear}-0-0`).toISOString(),
-        $lte: new Date(`${Number(advancementYear) + 1}-0-0`).toISOString()
+        $gte: new Date(advancementYear, 0, 0).toISOString(),
+        $lte: new Date(Number(advancementYear) + 1, 0, 0).toISOString()
       };
     }
 
@@ -148,8 +148,8 @@ router.get('/periods/:period', async (req, res) => {
 
     if (advancementYear) {
       query['añoAvance'] = {
-        $gte: new Date(`${advancementYear}-0-0`).toISOString(),
-        $lte: new Date(`${Number(advancementYear) + 1}-0-0`).toISOString()
+        $gte: new Date(advancementYear, 0, 0).toISOString(),
+        $lte: new Date(Number(advancementYear) + 1, 0, 0).toISOString()
       };
     }
 

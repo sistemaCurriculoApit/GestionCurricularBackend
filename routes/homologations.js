@@ -146,8 +146,8 @@ router.get('/periods/:period', async (req, res) => {
 
     if (homologationYear) {
       query['añoHomologacion'] = {
-        $gte: new Date(`${homologationYear}-0-0`).toISOString(),
-        $lte: new Date(`${Number(homologationYear) + 1}-0-0`).toISOString(),
+        $gte: new Date(homologationYear, 0, 0).toISOString(),
+        $lte: new Date(Number(homologationYear) + 1, 0, 0).toISOString(),
       };
     }
 
