@@ -30,8 +30,10 @@ app.all(function (req, res, next) {
   res.header('Access-Control-Allow-Headers', 'Origin,X-Requested-With,Content-Type,Accept,content-type,application/json');
   next();
 });
-
-app.use(cors());
+var corsOptions = {
+  origin: ['https://gestion-curricular-frontend-tau.vercel.app', 'http://localhost:3002']
+}
+app.use(cors(corsOptions));
 app.use(bodyParser.json());
 
 router.use('/', userRoute);
