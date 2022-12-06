@@ -1,70 +1,74 @@
-const express = require('express')
-const actaModel = require('../models/acta')
-const userModel = require('../models/user')
-const docenteModel = require('../models/docente')
-const homologacion = require('../models/homologacion')
-const avance = require('../models/avance')
-const route = express.Router()
-const verifyToken = require('./validarToken')
+const actaModel = require('../models/acta');
+const userModel = require('../models/user');
+const docenteModel = require('../models/docente');
+const homologacion = require('../models/homologation');
+const avance = require('../models/advancement');
+const router = require('express').Router();
+const verifyToken = require('../util/tokenValidation');
 
+router.get('/dataCount', verifyToken, async (req, res) => {
+  try {
+    const [
+      totalUsers,
+      totalDocentes,
+      totalActas
+    ] = await Promise.all([
+      userModel.count({}),
+      docenteModel.count({}),
+      actaModel.count({})
+    ]);
 
+    res.send({ totalUsers, totalDocentes, totalActas });
+  } catch (error) {
+    console.log(error);
+    res.send(error.message);
+  }
+});
 
-route.get('/dataCount', verifyToken, async (req, res) => {
-    try {
-
-        const totalUsers = await userModel.count({});
-        const totalDocentes = await docenteModel.count({});
-        const totalActas = await actaModel.count({});
-
-        res.send({ totalUsers, totalDocentes, totalActas })
-    } catch (error) {
-        console.log(error);
-        res.send(error.message)
-    }
-})
-
-route.get('/chartHomologaciones', verifyToken, async (req, res) => {
-    try {
-        let query = {}
-        let homologacionesByMonth = []
-        var date = new Date();
-        for (let i = 0; i < 12; i++) {
-            var firstDay = new Date(date.getFullYear(), i, 1);
-            var lastDay = new Date(date.getFullYear(), i + 1, 0);
-            query.fechaCreacion = {}
-            query.fechaCreacion.$gte = firstDay.toISOString();
-            query.fechaCreacion.$lte = lastDay.toISOString();
-            const homologaciones = await homologacion.count(query);
-            homologacionesByMonth.push(homologaciones);
+router.get('/chartHomologaciones', verifyToken, async (req, res) => {
+  try {
+    const promises = [];
+    const currentYear = new Date().getFullYear();
+    for (let i = 0; i < 12; i++) {
+      const query = {
+        fechaCreacion: {
+          $gte: new Date(currentYear, i, 0).toISOString(),
+          $lte: new Date(currentYear, i + 1, 0).toISOString()
         }
-
-        res.send({ homologacionesByMonth })
-    } catch (error) {
-        console.log(error);
-        res.send(error.message)
+      };
+      promises.push(homologacion.count(query));
     }
-})
 
-route.get('/chartAvances', verifyToken, async (req, res) => {
-    try {
-        let query = {}
-        let avancesByMonth = []
-        var date = new Date();
-        for (let i = 0; i < 12; i++) {
-            var firstDay = new Date(date.getFullYear(), i, 1);
-            var lastDay = new Date(date.getFullYear(), i + 1, 0);
-            query.fechaCreacion = {}
-            query.fechaCreacion.$gte = firstDay.toISOString();
-            query.fechaCreacion.$lte = lastDay.toISOString();
-            const avances = await avance.count(query);
-            avancesByMonth.push(avances);
+    const homologacionesByMonth = await Promise.all(promises);
+
+    res.send({ homologacionesByMonth });
+  } catch (error) {
+    console.log(error);
+    res.send(error.message);
+  }
+});
+
+router.get('/chartAvances', verifyToken, async (req, res) => {
+  try {
+    const promises = [];
+    const currentYear = new Date().getFullYear();
+    for (let i = 0; i < 12; i++) {
+      const query = {
+        fechaCreacion: {
+          $gte: new Date(currentYear, i, 0).toISOString(),
+          $lte: new Date(currentYear, i + 1, 0).toISOString()
         }
-
-        res.send({ avancesByMonth })
-    } catch (error) {
-        console.log(error);
-        res.send(error.message)
+      };
+      promises.push(avance.count(query));
     }
-})
 
-module.exports = route
+    const avancesByMonth = await Promise.all(promises);
+
+    res.send({ avancesByMonth });
+  } catch (error) {
+    console.log(error);
+    res.send(error.message);
+  }
+});
+
+module.exports = router;

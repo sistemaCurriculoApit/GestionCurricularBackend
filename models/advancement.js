@@ -1,15 +1,16 @@
-const mongoose = require('mongoose')
-const programa = require('./programa')
-const plan = require('./plan')
-const area = require('./area')
-const asignatura = require('./asignatura')
-const docente = require('./docente')
-const contenido = require('./contenido')
+const mongoose = require('mongoose');
+const program = require('./programa');
+const plan = require('./plan');
+const area = require('./area');
+const subject = require('./asignatura');
+const professor = require('./docente');
+const content = require('./contenido');
+const concertacion = require('./concertacion');
 
-const avance = mongoose.Schema({
+const advancement = mongoose.Schema({
   programaId: {
     type: mongoose.Schema.ObjectId,
-    ref: programa
+    ref: program
   },
   planId: {
     type: mongoose.Schema.ObjectId,
@@ -21,17 +22,17 @@ const avance = mongoose.Schema({
   },
   asignaturaId: {
     type: mongoose.Schema.ObjectId,
-    ref: asignatura
+    ref: subject
   },
   docenteId: {
     type: mongoose.Schema.ObjectId,
-    ref: docente
+    ref: professor
   },
   contenido: [
     {
       _id: {
         type: mongoose.Schema.ObjectId,
-        ref: contenido
+        ref: content
       }
     }
   ],
@@ -61,7 +62,12 @@ const avance = mongoose.Schema({
   estado: {
     type: Boolean,
     required: true
+  },
+  concertacion: {
+    type: Array,
+    content: concertacion
   }
 
-})
-module.exports = mongoose.model('Avance', avance)
+});
+
+module.exports = mongoose.model('Avance', advancement);
